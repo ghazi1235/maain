@@ -1,0 +1,29 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'io.github.ghazi1235.claudevoice'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'io.github.ghazi1235.claudevoice'
+        // The Toshiba/Hisense A4 runs Android TV 9 (SDK 28).
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies { }

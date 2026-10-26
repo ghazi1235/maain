@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Claude</string>
+    <string name="hint_idle">Press OK and speak</string>
+    <string name="hint_no_key">No API key set. See the README.</string>
+    <string name="state_listening">Listening…</string>
+    <string name="state_thinking">Thinking…</string>
+    <string name="state_speaking">Speaking…</string>
+    <string name="no_voice">(No voice installed for this language. Install Google Text-to-Speech and its Arabic or French voice data.)</string>
+</resources>

@@ -1,0 +1,2 @@
+rootProject.name = 'claude-voice'
+include ':app'
