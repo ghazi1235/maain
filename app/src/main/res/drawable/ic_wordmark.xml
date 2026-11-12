@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "MAX" as a neon tube: a soft coloured bloom, a cyan-to-magenta gradient tube and a white-hot
+     filament, all the same geometric strokes so the wordmark is identical in the app and in the
+     launcher banner without shipping a font or bitmap. Gradient strokes need API 24+. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="180dp"
+    android:height="64dp"
+    android:viewportWidth="180"
+    android:viewportHeight="64">
+    <!-- bloom -->
+    <path
+        android:pathData="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54"
+        android:strokeWidth="15"
+        android:strokeAlpha="0.22"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="18"
+                android:startY="32"
+                android:endX="162"
+                android:endY="32"
+                android:startColor="#05D9E8"
+                android:endColor="#FF2A6D" />
+        </aapt:attr>
+    </path>
+    <!-- tube -->
+    <path
+        android:pathData="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="18"
+                android:startY="32"
+                android:endX="162"
+                android:endY="32"
+                android:startColor="#5FEBF7"
+                android:centerColor="#B58CFF"
+                android:endColor="#FF5C93" />
+        </aapt:attr>
+    </path>
+    <!-- filament -->
+    <path
+        android:pathData="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54"
+        android:strokeColor="#F4FDFF"
+        android:strokeWidth="2.2"
+        android:strokeAlpha="0.92"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

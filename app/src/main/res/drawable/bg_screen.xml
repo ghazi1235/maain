@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Screen background: a deep violet-to-black room lit by two soft neon blooms (magenta behind
+     the core, cyan low on the right) and darkened at the edges so the glow reads as depth. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="90"
+                android:startColor="@color/bg_deep"
+                android:endColor="@color/bg" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.22"
+                android:centerY="0.50"
+                android:gradientRadius="48%p"
+                android:startColor="#8C4A0F49"
+                android:centerColor="#3A2A0838"
+                android:endColor="#0005010E" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.84"
+                android:centerY="0.96"
+                android:gradientRadius="52%p"
+                android:startColor="#6606384A"
+                android:centerColor="#26062536"
+                android:endColor="#0005010E" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:gradientRadius="80%p"
+                android:startColor="#00000000"
+                android:centerColor="#1405010E"
+                android:endColor="#B305010E" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Conversation panel: dark glass with a one-pixel cyan-to-magenta hairline and a faint sheen
+     along the top edge. The hairline is the gradient layer showing through a 1dp inset. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#8005D9E8"
+                android:centerColor="#3A8A4AD9"
+                android:endColor="#80FF2A6D" />
+            <corners android:radius="22dp" />
+        </shape>
+    </item>
+    <item
+        android:left="1dp"
+        android:top="1dp"
+        android:right="1dp"
+        android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#E0070116" />
+            <corners android:radius="21dp" />
+        </shape>
+    </item>
+    <item
+        android:left="1dp"
+        android:top="1dp"
+        android:right="1dp"
+        android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#12FFFFFF"
+                android:centerColor="#03FFFFFF"
+                android:endColor="#00000000" />
+            <corners android:radius="21dp" />
+        </shape>
+    </item>
+</layer-list>

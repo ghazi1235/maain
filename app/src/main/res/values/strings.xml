@@ -1,10 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Claude</string>
+    <string name="app_name">MAX</string>
     <string name="hint_idle">Press OK and speak</string>
     <string name="hint_no_key">No API key set. See the README.</string>
     <string name="state_listening">Listening…</string>
     <string name="state_thinking">Thinking…</string>
     <string name="state_speaking">Speaking…</string>
     <string name="no_voice">(No voice installed for this language. Install Google Text-to-Speech and its Arabic or French voice data.)</string>
+
+    <!-- Chrome: brand line, language chip, conversation labels, remote legend. -->
+    <string name="brand_tag">Voice core · online</string>
+    <string name="chip_lang">Language</string>
+    <string name="chip_prev">‹</string>
+    <string name="chip_next">›</string>
+    <string name="tag_you">You</string>
+    <string name="tag_max">Max</string>
+    <string name="hint_heard">Waiting for your voice</string>
+    <string name="hint_reply">Ask me anything, in Derja or in French.</string>
+    <string name="key_ok">OK</string>
+    <string name="key_arrows">‹ ›</string>
+    <string name="key_stop">■</string>
+    <!-- The menu key cap (the yellow colour key's dot) is set at runtime from
+         MainActivity.MENU_KEY_LABEL; this is its fallback. -->
+    <string name="key_menu">●</string>
+    <string name="key_updown">▲▼</string>
+    <string name="key_back">BACK</string>
+    <string name="legend_speak">Speak</string>
+    <string name="legend_language">Language</string>
+    <string name="legend_new">New conversation</string>
+    <string name="legend_menu">Menu</string>
+
+    <!-- On-screen menu -->
+    <string name="menu_title">Menu</string>
+    <string name="menu_cameras">Cameras</string>
+    <string name="menu_cameras_sub">Center wall · 18 live views</string>
+    <string name="menu_language">Language</string>
+    <string name="menu_language_sub">Derja ⇄ Français · ‹ › switch</string>
+    <string name="menu_new">New conversation</string>
+    <string name="menu_new_sub">Forget what was said so far</string>
+    <string name="menu_status">Status</string>
+    <string name="menu_status_sub">Version · voice · brain</string>
+    <string name="menu_chevron">›</string>
+    <string name="menu_move">Move</string>
+    <string name="menu_select">Select</string>
+    <string name="menu_close">Close</string>
+    <string name="status_title">Status</string>
+    <string name="status_version">Version</string>
+    <string name="status_voice">Voice</string>
+    <string name="status_brain">Brain</string>
+    <string name="status_input">Listening in</string>
+    <string name="status_link">Remote link</string>
+    <string name="status_keys">Keys</string>
+
+    <!-- Idle screensaver -->
+    <string name="saver_status">Max · standby · press any key</string>
 </resources>
