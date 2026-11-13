@@ -2,3 +2,7 @@
 build/
 local.properties
 *.apk
+center-kit/
+
+# Project handoff — contains live secrets, never commit
+MAX_PROJECT_HANDOFF.md

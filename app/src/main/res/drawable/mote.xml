@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A floating mote of light: white-hot centre, cyan glow, used for the screensaver's particles. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:centerX="0.5"
+        android:centerY="0.5"
+        android:gradientRadius="50%p"
+        android:startColor="#FFFFFFFF"
+        android:centerColor="#8C9FF6FF"
+        android:endColor="#0005D9E8" />
+</shape>

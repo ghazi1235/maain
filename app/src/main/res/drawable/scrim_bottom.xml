@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soft dark gradient along the bottom edge, carrying the clock, weather and news over any
+     painting. Dark at the very bottom, fading to clear. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="90"
+        android:type="linear"
+        android:startColor="#E605010E"
+        android:centerColor="#7A05010E"
+        android:endColor="#0005010E" />
+</shape>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The core's active skin: electric cyan plasma faded in over the magenta one while MAX
+     listens. Same geometry as orb.xml so the two stack pixel for pixel. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.40"
+                android:centerY="0.36"
+                android:gradientRadius="74%p"
+                android:startColor="@color/hot_light"
+                android:centerColor="@color/hot"
+                android:endColor="@color/hot_dark" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.40"
+                android:centerY="0.36"
+                android:gradientRadius="70%p"
+                android:startColor="#00000000"
+                android:centerColor="#00000000"
+                android:endColor="#73000000" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#00000000" />
+            <stroke
+                android:width="1.5dp"
+                android:color="#B3A9F4FF" />
+        </shape>
+    </item>
+    <item
+        android:left="15dp"
+        android:top="15dp"
+        android:right="15dp"
+        android:bottom="15dp">
+        <shape android:shape="oval">
+            <solid android:color="#00000000" />
+            <stroke
+                android:width="1dp"
+                android:color="#5CFF2A6D" />
+        </shape>
+    </item>
+    <item
+        android:left="22dp"
+        android:top="12dp"
+        android:right="60dp"
+        android:bottom="78dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:gradientRadius="50%p"
+                android:startColor="#CCFFFFFF"
+                android:centerColor="#38FFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

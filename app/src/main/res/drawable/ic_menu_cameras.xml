@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Menu glyph "Cameras": a dome CCTV camera on its rail. Tabler-style line icon on a 24 grid,
+     1.6 stroke, round caps; drawn white and tinted by MainActivity.MaxMenu (cyan when focused). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- rail -->
+    <path
+        android:pathData="M4 3h16a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- dome -->
+    <path
+        android:pathData="M19 7v7a7 7 0 0 1 -14 0v-7"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- lens -->
+    <path
+        android:pathData="M12 14m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M12 14l0.01 0"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round" />
+</vector>

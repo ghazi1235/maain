@@ -1,0 +1,504 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MAX</title>
+<style>
+/* Night City palette, same as the app: neon magenta + electric cyan on near-black violet. */
+:root{--bg:#05010E;--bg2:#0D0221;--mag:#FF2A6D;--cy:#05D9E8;--cy2:#00F0FF;--vio:#8A4AD9;--tx:#F2FBFF;--tx2:#9BE9F2;--dim:#6F5B91;--hint:#3E3760;--glass:rgba(7,1,22,.80)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{color:var(--tx);font-family:Roboto,"Segoe UI",-apple-system,sans-serif;font-weight:300;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+  background:#05010E;
+  background-image:
+    radial-gradient(62% 58% at 16% 34%, rgba(74,15,73,.62) 0%, rgba(42,8,56,.26) 42%, rgba(5,1,14,0) 70%),
+    radial-gradient(58% 52% at 86% 98%, rgba(6,56,74,.58) 0%, rgba(6,37,54,.18) 42%, rgba(5,1,14,0) 70%),
+    linear-gradient(180deg,#0D0221 0%,#05010E 100%);
+  animation:fadein .8s ease-out both}
+body:before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(85% 85% at 50% 48%, rgba(5,1,14,0) 45%, rgba(5,1,14,.70) 100%)}
+
+/* ---------- header ---------- */
+#bar{position:absolute;top:0;left:0;right:0;height:46px;z-index:2;display:flex;align-items:center;gap:14px;padding:0 16px 0 14px}
+#bar:after{content:'';position:absolute;left:14px;right:14px;bottom:0;height:1px;background:linear-gradient(90deg,rgba(5,217,232,0),rgba(5,217,232,.6) 16%,rgba(138,74,217,.38) 50%,rgba(255,42,109,.6) 84%,rgba(255,42,109,0))}
+.wm{display:block;width:64px;height:23px;flex:none;filter:drop-shadow(0 0 7px rgba(5,217,232,.38))}
+.sep{width:1px;height:18px;flex:none;background:rgba(5,217,232,.22)}
+.led{width:9px;height:9px;border-radius:50%;background:var(--cy);box-shadow:0 0 8px var(--cy),0 0 18px rgba(5,217,232,.5);position:relative;flex:none;transition:background .4s,box-shadow .4s}
+.led:after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px solid rgba(5,217,232,.65);animation:ping 2.6s ease-out infinite}
+body.down .led{background:var(--mag);box-shadow:0 0 8px var(--mag),0 0 18px rgba(255,42,109,.5)} body.down .led:after{border-color:rgba(255,42,109,.65)}
+body.wait .led{background:var(--tx2);box-shadow:0 0 8px rgba(155,233,242,.5);animation:breathe 1.8s ease-in-out infinite} body.wait .led:after{display:none}
+.tag-t{font-weight:500;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.tag-t b{font-weight:500;color:var(--tx2);text-shadow:0 0 9px rgba(5,217,232,.5)}
+#bar .sp{flex:1}
+#legend{position:absolute;left:50%;top:0;height:46px;transform:translateX(-50%);display:flex;align-items:center;gap:24px;white-space:nowrap}
+.key{display:inline-flex;align-items:center;gap:8px;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:400}
+.key kbd{font-family:inherit;font-weight:500;font-size:9.5px;letter-spacing:.1em;color:var(--tx2);padding:3px 7px;border-radius:5px;background:rgba(7,1,22,.72);border:1px solid rgba(5,217,232,.3);box-shadow:0 0 10px rgba(5,217,232,.08);min-width:26px;text-align:center;line-height:1}
+.pill{display:inline-flex;padding:1px;border-radius:14px;background:linear-gradient(90deg,rgba(5,217,232,.6),rgba(138,74,217,.32),rgba(255,42,109,.6))}
+#cnt{display:inline-flex;align-items:center;gap:.55em;height:24px;padding:0 13px;border-radius:13px;background:rgba(10,3,24,.94);font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:500;color:var(--dim);white-space:nowrap}
+#cnt .md{color:var(--hint)}
+#cnt .ok{color:var(--cy);text-shadow:0 0 8px rgba(5,217,232,.6)} #cnt .bad{color:var(--mag);text-shadow:0 0 8px rgba(255,42,109,.55)} #cnt .dimm{color:var(--tx2);opacity:.8}
+#clock{font-size:17px;font-weight:300;letter-spacing:.08em;color:var(--tx);font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(5,217,232,.35)}
+
+/* ---------- wall ---------- */
+#grid{position:absolute;top:44px;left:8px;right:8px;bottom:8px;z-index:1;outline:none}
+.cam{position:absolute;left:0;top:0;transform-origin:0 0;z-index:1}
+.cam.anim{transition:transform .52s cubic-bezier(.22,.9,.28,1)}
+.cam.sel{z-index:3} .cam.main{z-index:4}
+.card{position:absolute;inset:0;border-radius:10px;background:linear-gradient(135deg,rgba(5,217,232,.5),rgba(138,74,217,.22) 50%,rgba(255,42,109,.5));
+  box-shadow:0 0 0 1px rgba(5,1,14,.7),0 8px 28px rgba(0,0,0,.45),0 0 18px rgba(5,217,232,.07);transition:transform .24s ease,box-shadow .28s ease,background .28s}
+.body{position:absolute;inset:1px;border-radius:9px;overflow:hidden;background:#06011a}
+.sz-s .card{border-radius:7px} .sz-s .body{border-radius:6px}
+.sz-l .card{border-radius:14px} .sz-l .body{border-radius:13px}
+@media (hover:hover){.cam:hover .card{background:linear-gradient(135deg,rgba(5,217,232,.8),rgba(138,74,217,.4) 50%,rgba(255,42,109,.8));box-shadow:0 0 0 1px rgba(5,1,14,.7),0 0 20px rgba(5,217,232,.3),0 10px 30px rgba(0,0,0,.5)}}
+body.grid .cam.sel .card{transform:scale(1.035);background:linear-gradient(135deg,#05D9E8,rgba(181,140,255,.95) 50%,#FF2A6D);
+  box-shadow:0 0 0 1px rgba(5,217,232,.35),0 0 22px rgba(5,217,232,.55),0 0 60px rgba(5,217,232,.22),0 14px 40px rgba(0,0,0,.6)}
+body.spot .cam.main .card{background:linear-gradient(135deg,rgba(5,217,232,.95),rgba(181,140,255,.7) 50%,rgba(255,42,109,.95));
+  box-shadow:0 0 0 1px rgba(5,217,232,.25),0 0 34px rgba(5,217,232,.3),0 0 90px rgba(255,42,109,.14),0 20px 60px rgba(0,0,0,.6)}
+.body iframe,.body img{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000}
+.body img{object-fit:cover}
+.cam.off img{opacity:.5;filter:grayscale(.6)}   /* keep last frame (dimmed) instead of going black */
+.shade{position:absolute;inset:0;z-index:3;cursor:pointer;background:linear-gradient(180deg,rgba(5,1,14,.32),rgba(5,1,14,0) 30%)}
+
+/* label chip: live dot + camera name, floating over the video */
+.tag{position:absolute;top:8px;left:8px;z-index:4;display:inline-flex;align-items:center;gap:7px;height:22px;padding:0 10px 0 8px;border-radius:11px;background:var(--glass);border:1px solid rgba(5,217,232,.24);box-shadow:0 2px 12px rgba(0,0,0,.45);
+  font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--tx);pointer-events:none;white-space:nowrap}
+.sz-s .tag{top:5px;left:5px;height:19px;padding:0 8px 0 6px;gap:6px;font-size:9.5px;letter-spacing:.1em}
+.sz-l .tag{top:14px;left:14px;height:30px;padding:0 15px 0 12px;gap:10px;font-size:13px;letter-spacing:.22em}
+.cam.stale .tag{border-color:rgba(252,238,10,.4)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);position:relative;flex:none;transition:background .4s,box-shadow .4s}
+.sz-s .dot{width:5px;height:5px} .sz-l .dot{width:9px;height:9px}
+.dot:after{content:'';position:absolute;inset:-3px;border-radius:50%;border:1px solid rgba(5,217,232,.7);animation:ping 2.6s ease-out infinite;display:none}
+.cam.live .dot{background:var(--cy);box-shadow:0 0 6px var(--cy),0 0 12px rgba(5,217,232,.6)}
+body.grid .cam.live .dot:after,body.spot .cam.live .dot:after{display:block}
+.cam.off .dot,body.down .cam .dot{background:var(--mag);box-shadow:0 0 6px var(--mag),0 0 12px rgba(255,42,109,.55)}
+body.down .cam .dot:after{display:none}
+body.wait .cam .dot{background:var(--tx2);box-shadow:0 0 6px rgba(155,233,242,.6);animation:breathe 1.8s ease-in-out infinite} body.wait .cam .dot:after{display:none}
+
+/* placeholder: shown while the centre link is connecting / down (and for poll-mode offline tiles) */
+.ph{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .8s ease;pointer-events:none;
+  background:radial-gradient(70% 70% at 50% 42%,#130838 0%,#0a0324 48%,#06011a 100%)}
+body.wait .ph,body.down .ph,.cam.off .ph{opacity:1}
+.cam.off .ph{background:rgba(5,1,14,.5)}
+.ph .ring{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;border:1px solid rgba(5,217,232,.5);opacity:0;animation:radar 3.8s ease-out infinite;display:none}
+.ph .ring.r2{animation-delay:1.9s}
+.sz-l .ph .ring{display:block;top:46%}
+.ph svg{width:42px;height:42px;filter:drop-shadow(0 0 7px rgba(5,217,232,.45)) drop-shadow(0 0 1px rgba(255,42,109,.5))}
+.sz-l .ph svg{width:92px;height:92px}
+.sz-s .ph svg{width:22px;height:22px;margin-top:8px}
+.ph .nm{display:none;margin-top:18px;font-size:22px;letter-spacing:.34em;text-transform:uppercase;font-weight:300;color:var(--tx);text-shadow:0 0 14px rgba(5,217,232,.4);padding-left:.34em}
+.sz-l .ph .nm{display:block}
+.ph .msg{margin-top:8px;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx2);animation:breathe 2.8s ease-in-out infinite;padding-left:.2em}
+.sz-l .ph .msg{font-size:12px;margin-top:12px}
+.sz-s .ph .msg{display:none}
+body.down .ph .msg{color:#ffa6c3}
+.ph .msg .d{display:none} body.down .ph .msg .d{display:inline} body.down .ph .msg .w{display:none}
+.ph .line{position:relative;margin-top:9px;width:36%;max-width:170px;height:1px;background:rgba(155,233,242,.14);overflow:hidden}
+.sz-s .ph .line{margin-top:8px;width:44%}
+.sz-l .ph .line{margin-top:14px}
+.ph .line:after{content:'';position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,rgba(5,217,232,0),#05D9E8 50%,rgba(5,217,232,0));transform:translateX(-100%);animation:sweep 2.9s cubic-bezier(.45,0,.2,1) infinite}
+body.down .ph .line:after{background:linear-gradient(90deg,rgba(255,42,109,0),#FF2A6D 50%,rgba(255,42,109,0))}
+
+/* status card: fills the cells the overview grid leaves empty */
+#card{position:absolute;opacity:0;transition:opacity .45s ease;pointer-events:none;z-index:1}
+body.grid #card.on{opacity:1}
+#card .body{display:flex;align-items:center;gap:20px;padding:0 24px;background:linear-gradient(135deg,rgba(16,5,44,.92),rgba(7,1,22,.96))}
+#card svg{width:48px;height:48px;flex:none;filter:drop-shadow(0 0 9px rgba(5,217,232,.4))}
+#card .cardwm{width:78px;height:28px;margin:0 0 2px -6px}
+#card .s{margin-top:7px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx2);white-space:nowrap}
+#card .s i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--cy);box-shadow:0 0 8px var(--cy);margin-right:9px;vertical-align:1px}
+body.down #card .s{color:#ffa6c3} body.down #card .s i{background:var(--mag);box-shadow:0 0 8px var(--mag)}
+body.wait #card .s i{background:var(--tx2);box-shadow:0 0 8px rgba(155,233,242,.5);animation:breathe 1.8s ease-in-out infinite}
+#card .h{margin-top:5px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+
+/* ---------- full-screen ---------- */
+#big{position:fixed;inset:0;z-index:50;background:#05010E;display:none;flex-direction:column}
+#big.on{display:flex}
+#big .top{height:46px;display:flex;align-items:center;gap:14px;padding:0 16px 0 14px;position:relative;flex:none}
+#big .top:after{content:'';position:absolute;left:14px;right:14px;bottom:0;height:1px;background:linear-gradient(90deg,rgba(5,217,232,0),rgba(5,217,232,.6) 16%,rgba(138,74,217,.38) 50%,rgba(255,42,109,.6) 84%,rgba(255,42,109,0))}
+#bigName{font-size:13px;letter-spacing:.3em;text-transform:uppercase;font-weight:300;color:var(--tx);text-shadow:0 0 12px rgba(5,217,232,.45)}
+#big .hint{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);font-weight:500}
+#big .sp{flex:1}
+#big .x{cursor:pointer;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;color:var(--tx2);border:1px solid rgba(5,217,232,.32);background:rgba(7,1,22,.72);margin-left:6px}
+#big .frame{flex:1;position:relative;background:#000}
+#big iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;background:#000}
+#big iframe.show{z-index:2}   /* double buffer: the shown stream sits on top; the other keeps decoding (preloaded) behind it */
+
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes ping{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.3);opacity:0}}
+@keyframes breathe{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes sweep{to{transform:translateX(350%)}}
+@keyframes radar{0%{transform:scale(.3);opacity:.75}100%{transform:scale(1.5);opacity:0}}
+</style></head>
+<body class="grid wait">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+ <linearGradient id="cg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#05D9E8"/><stop offset=".55" stop-color="#9B7BFF"/><stop offset="1" stop-color="#FF2A6D"/></linearGradient>
+ <linearGradient id="wmb" x1="18" y1="32" x2="162" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#05D9E8"/><stop offset="1" stop-color="#FF2A6D"/></linearGradient>
+ <linearGradient id="wmt" x1="18" y1="32" x2="162" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5FEBF7"/><stop offset=".5" stop-color="#B58CFF"/><stop offset="1" stop-color="#FF5C93"/></linearGradient>
+</defs></svg>
+<div id="bar">
+ <!-- the app's MAX neon-tube wordmark: bloom, gradient tube, white-hot filament -->
+ <svg class="wm" viewBox="0 0 180 64" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54" stroke="url(#wmb)" stroke-width="15" stroke-opacity=".22"/>
+  <path d="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54" stroke="url(#wmt)" stroke-width="6.5"/>
+  <path d="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54" stroke="#F4FDFF" stroke-width="2.2" stroke-opacity=".92"/>
+ </svg>
+ <span class="sep"></span><span class="led"></span><span class="tag-t"><b>Live</b></span>
+ <div id="legend"></div>
+ <span class="sp"></span><span class="pill"><span id="cnt"></span></span><span id="clock"></span>
+</div>
+<div id="grid" tabindex="0">
+ <div id="card"><div class="card"><div class="body"><span class="gslot"></span><div>
+  <svg class="wm cardwm" viewBox="0 0 180 64" fill="none" stroke-linecap="round" stroke-linejoin="round">
+   <path d="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54" stroke="url(#wmb)" stroke-width="15" stroke-opacity=".22"/>
+   <path d="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54" stroke="url(#wmt)" stroke-width="6.5"/>
+   <path d="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54" stroke="#F4FDFF" stroke-width="2.2" stroke-opacity=".92"/>
+  </svg>
+  <div class="s" id="cardLink"><i></i>connecting&hellip;</div><div class="h" id="cardHost"></div></div></div></div></div>
+</div>
+<div id="big"><div class="top">
+ <svg class="wm" viewBox="0 0 180 64" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54" stroke="url(#wmb)" stroke-width="15" stroke-opacity=".22"/>
+  <path d="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54" stroke="url(#wmt)" stroke-width="6.5"/>
+  <path d="M18,54 V10 L36,38 L54,10 V54 M76,54 L94,10 L112,54 M83.5,38 H104.5 M134,10 L162,54 M162,10 L134,54" stroke="#F4FDFF" stroke-width="2.2" stroke-opacity=".92"/>
+ </svg>
+ <span class="sep"></span><span class="led"></span><span id="bigName"></span><span class="hint">full screen</span><span class="sp"></span><span class="key"><kbd>&#9664; &#9654;</kbd>camera</span><span class="key"><kbd>BACK</kbd>spotlight</span><span class="x" onclick="closeBig()">&times;</span></div>
+<div class="frame sz-l"><iframe id="bigFrame" allow="autoplay" tabindex="-1"></iframe><iframe id="bigFrameB" allow="autoplay" tabindex="-1"></iframe><div class="ph"><span class="ring"></span><span class="ring r2"></span><span class="gslot"></span><div class="nm" id="bigPh"></div><div class="msg"><span class="w">connecting&hellip;</span><span class="d">reconnecting&hellip;</span></div><div class="line"></div></div></div></div>
+<script>
+var CAMS=[
+ ["dahua_ch1","CAM 1"],["dahua_ch2","CAM 2"],["dahua_ch3","CAM 3"],["dahua_ch4","CAM 4"],
+ ["dahua_ch5","CAM 5"],["dahua_ch6","CAM 6"],["dahua_ch7","CAM 7"],
+ ["uni102","UNIVIEW .102"],["uni165","UNIVIEW .165"],["uni170","UNIVIEW .170"],
+ ["inova1","INOVA 1"],["inova2","INOVA 2"],["inova3","INOVA 3"],["inova4","INOVA 4"],
+ ["inova5","INOVA 5"],["inova6","INOVA 6"],["inova7","INOVA 7"],["inova8","INOVA 8"]
+];
+function qp(n){ try{ var m=location.search.match(new RegExp('[?&]'+n+'=([^&]*)')); return m?decodeURIComponent(m[1]):''; }catch(e){ return ''; } }
+var HOST=qp('host') || ((location.protocol==='file:'||!location.hostname)?'192.168.0.166':location.hostname);
+var API='http://'+HOST+':1984';                 // go2rtc (live, for enlarge)
+var CTL=(location.protocol==='file:')?'http://'+HOST+':8080':''; // control server (snapshots), same origin when served
+/* ---------- bounded snapshot scheduler (replaces the old per-tile 800ms poll) ----------
+   One scheduler drives all 18 tiles. At most SNAP_MAX requests are in flight (one per tile),
+   each with a wall-clock DEADLINE, and a generation token (snapGen) makes a late load / error /
+   timeout callback from a previous run harmless: it can neither paint a stale tile nor free a
+   current slot. These are tunable benchmark inputs, not proven settings. */
+var SNAP_W=480;         // thumbnail width requested from go2rtc (same endpoint & size -> same cache)
+var SNAP_REFRESH=2000;  // per-tile overview cadence, ms (snappier; was 4000 — the SNAP_MAX cap still bounds load)
+var SNAP_DEADLINE=7000; // per-request wall-clock deadline, ms (plan: 5-8s)
+var SNAP_MAX=4;         // global cap on concurrent snapshot requests (was 3; a touch more throughput)
+var SNAP_RETRY=5;       // consecutive misses before a tile backs off to the slow retry
+var SNAP_SLOW=12000;    // slow self-heal interval once a tile is marked offline, ms (was 20000 — recover a returning cam sooner)
+var snapGen=0, snapInflight=0, snapTick=null, snapOn=false;
+var tiles=[], liveCount=0;
+var tour=null, tourPaused=false, tourActive=false, TOURMS=12000;
+var wallPaused=false;                                  // app background (onPause) state
+var bigCam=null, bigGen=0, bigRetry=0, BIG_RETRY_MAX=3; // full-screen live player state
+var bigFrames=null, bigVis=0, bigHeld=['',''], preTimer=null;  // double-buffered iframes: preload the next tour camera for an instant swap
+function liveIdx(from,dir){ var n=tiles.length,i=from; for(var k=0;k<n;k++){ i=((i+dir)%n+n)%n; if(!tiles[i].el.classList.contains('off')) return i; } return from; }
+function firstLive(){ for(var i=0;i<tiles.length;i++){ if(!tiles[i].el.classList.contains('off')) return i; } return -1; }
+function isLive(i){ return i>=0 && tiles[i] && !tiles[i].el.classList.contains('off'); }
+function tourGo(dir){ var i=liveIdx(sel,dir||1); if(isLive(i)){ sel=i; openBig(tiles[sel]); } }   // never (re)open an offline source
+function armTour(){ if(tour) clearInterval(tour); tour=setInterval(function(){ if(!tourPaused&&full) tourGo(1); }, TOURMS); }
+function startTour(){ tourPaused=false; tourActive=true; if(!full){ var i=firstLive(); if(i>=0){ sel=i; openBig(tiles[sel]); } } armTour(); legend(); }   // no live camera: arm idle, don't open an offline source
+function stopTour(){ if(tour){ clearInterval(tour); tour=null; } if(preTimer){ clearTimeout(preTimer); preTimer=null; } tourPaused=false; tourActive=false; }
+var g=document.getElementById('grid');
+var GAP=9, mode='grid', sel=0, full=false, cols=1, rects=[];
+var GLYPH='<svg viewBox="0 0 64 64" fill="none" stroke="url(#cg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="20" width="34" height="24" rx="5"/><path d="M40 29l16-7v20l-16-7"/><circle cx="19" cy="32" r="5"/><circle cx="19" cy="32" r="1.4" fill="url(#cg)" stroke="none"/><circle cx="33" cy="27" r="1.7" fill="#FF2A6D" stroke="none" opacity=".9"/></svg>';
+
+/* ---------- layout: overview grid, or spotlight (one big + the rest in an L) ---------- */
+function gridPlan(n,W,H){
+  var best=1,bestA=0;
+  for(var c=1;c<=n;c++){ var r=Math.ceil(n/c); var tw=(W-(c-1)*GAP)/c, th=(H-(r-1)*GAP)/r, use=Math.min(tw/(16/9),th)*Math.min(th*(16/9),tw); if(use>bestA){bestA=use;best=c;} }
+  var c2=best, r2=Math.ceil(n/c2), cw=(W-(c2-1)*GAP)/c2, rh=(H-(r2-1)*GAP)/r2, out=[];
+  for(var i=0;i<n;i++){ var col=i%c2,row=Math.floor(i/c2); out.push({x:col*(cw+GAP),y:row*(rh+GAP),w:cw,h:rh}); }
+  var left=c2*r2-n, card=null;
+  if(left>0){ var c0=n%c2; card={x:c0*(cw+GAP),y:(r2-1)*(rh+GAP),w:left*cw+(left-1)*GAP,h:rh}; }
+  return {rects:out,cols:c2,card:card};
+}
+function spotPlan(n,focus,W,H){
+  if(n<2) return {rects:[{x:0,y:0,w:W,h:H}],cols:1,card:null};
+  var m=n-1,best=null;
+  // unit grid C x R; main spans (C-k) x (R-b) top-left; k right columns + b bottom rows hold the others
+  for(var C=2;C<=14;C++) for(var R=2;R<=12;R++) for(var k=0;k<=3;k++) for(var b=0;b<=2;b++){
+    if((k===0&&b===0)||k>=C||b>=R) continue;
+    var cap=k*(R-b)+b*C, waste=cap-m; if(waste<0||waste>2) continue;
+    var cw=(W-(C-1)*GAP)/C, rh=(H-(R-1)*GAP)/R, a=cw/rh;
+    var mc=C-k, mr=R-b, mw=mc*cw+(mc-1)*GAP, mh=mr*rh+(mr-1)*GAP, ma=mw/mh;
+    if((mw*mh)/(W*H)<0.5) continue;
+    var ea=Math.abs(Math.log(a/(16/9))), em=Math.abs(Math.log(ma/(16/9)));
+    if(ea>0.16||em>0.2) continue;
+    var score=cw-40*waste-120*ea-80*em;
+    if(!best||score>best.score) best={score:score,C:C,R:R,cw:cw,rh:rh,mc:mc,mr:mr,mw:mw,mh:mh};
+  }
+  if(!best) return gridPlan(n,W,H);
+  var p=best,slots=[],out=new Array(n),s=0,r,c;
+  for(r=0;r<p.mr;r++) for(c=p.mc;c<p.C;c++) slots.push({x:c*(p.cw+GAP),y:r*(p.rh+GAP),w:p.cw,h:p.rh});
+  for(r=p.mr;r<p.R;r++) for(c=0;c<p.C;c++) slots.push({x:c*(p.cw+GAP),y:r*(p.rh+GAP),w:p.cw,h:p.rh});
+  for(var i=0;i<n;i++){ out[i]=(i===focus)?{x:0,y:0,w:p.mw,h:p.mh}:slots[s++]; }
+  return {rects:out,cols:1,card:null};
+}
+function layout(animate){
+  var W=g.clientWidth,H=g.clientHeight,n=tiles.length; if(!n) return;
+  var plan=(mode==='spot')?spotPlan(n,sel,W,H):gridPlan(n,W,H);
+  rects=plan.rects; cols=plan.cols||1;
+  var gb=g.getBoundingClientRect(), flip=[];
+  tiles.forEach(function(t,i){
+    var r=rects[i], el=t.el, old=null;
+    if(animate){ var b=el.getBoundingClientRect(); old={x:b.left-gb.left,y:b.top-gb.top,w:b.width,h:b.height}; }
+    el.classList.remove('anim');
+    el.style.left=r.x+'px'; el.style.top=r.y+'px'; el.style.width=r.w+'px'; el.style.height=r.h+'px';
+    el.classList.toggle('sz-l',r.h>=240); el.classList.toggle('sz-m',r.h<240&&r.h>=95); el.classList.toggle('sz-s',r.h<95);
+    el.classList.toggle('main',mode==='spot'&&i===sel); el.classList.toggle('sel',i===sel);
+    if(old&&old.w>0&&old.h>0){ el.style.transform='translate('+(old.x-r.x)+'px,'+(old.y-r.y)+'px) scale('+(old.w/r.w)+','+(old.h/r.h)+')'; flip.push(el); }
+    else el.style.transform='';
+  });
+  if(flip.length){ void g.offsetWidth; flip.forEach(function(el){ el.classList.add('anim'); el.style.transform=''; }); }
+  var card=document.getElementById('card');
+  if(plan.card){ card.style.left=plan.card.x+'px'; card.style.top=plan.card.y+'px'; card.style.width=plan.card.w+'px'; card.style.height=plan.card.h+'px'; card.classList.add('on'); }
+  else card.classList.remove('on');
+}
+function markSel(){ tiles.forEach(function(t,i){ t.el.classList.toggle('sel',i===sel); }); }
+
+/* ---------- streaming: bounded snapshot scheduler ----------
+   startLoad() fetches one tile; settle() runs exactly once per request (load, error, or deadline)
+   and releases its slot exactly once. A generation mismatch (myGen!==snapGen) means the request
+   belongs to an abandoned run, so it neither paints its tile nor touches the current slot count. */
+function startLoad(t){
+  var myGen=snapGen, done=false, im=new Image();
+  t.loading=true; snapInflight++;
+  var to=setTimeout(function(){ settle(false,true); }, SNAP_DEADLINE);
+  function settle(ok,timedOut){
+    if(done) return; done=true;
+    clearTimeout(to); im.onload=im.onerror=null;
+    if(timedOut){ try{ im.src=''; }catch(e){} }    // hint the WebView to drop an otherwise uncancellable request
+    if(myGen!==snapGen) return;                     // late callback from a previous generation: drop it
+    t.loading=false; snapInflight--;                // release this generation's slot, once
+    var now=Date.now();
+    if(ok){
+      t.img.src=im.src; t.lastOk=now; t.fail=0; t.retry=SNAP_RETRY;
+      t.el.classList.remove('stale');
+      if(!t.el.classList.contains('live')){ t.el.classList.add('live'); t.el.classList.remove('off'); recount(); }
+      t.nextDue=now+SNAP_REFRESH;
+    } else {
+      t.fail=(t.fail||0)+1;
+      if(t.el.classList.contains('live')) t.el.classList.add('stale');   // keep the last frame, flag it stale
+      if(t.fail>=3 && !t.el.classList.contains('off')){
+        t.el.classList.remove('live'); t.el.classList.add('off');
+        var m=t.el.querySelector('.msg'); if(m) m.textContent='offline'; recount();
+      }
+      t.retry=(t.retry==null?SNAP_RETRY:t.retry)-1;
+      t.nextDue=now + (t.retry>0 ? Math.min(SNAP_REFRESH*t.fail, 9000) : SNAP_SLOW);  // back off, then slow self-heal
+    }
+    pump();
+  }
+  im.onload=function(){ settle(true,false); };
+  im.onerror=function(){ settle(false,false); };
+  im.src=API+'/api/frame.jpeg?src='+encodeURIComponent(t.name)+'&w='+SNAP_W+'&t='+Date.now();
+}
+function pump(){
+  if(!snapOn) return;
+  var now=Date.now(), i, t;
+  // Fair slot allocation: gather every due tile, then serve the MOST-overdue first.
+  // The old loop always scanned from i=0, so the low-index Dahua/Uniview tiles kept
+  // winning all SNAP_MAX slots on their fast cadence and the high-index INOVA tiles
+  // (indices 10-17) were starved -- they never won a slot, never loaded a frame, and
+  // so sat on 'connecting' forever even while go2rtc had them live. Earliest-due-first
+  // guarantees every tile is served in turn; no tile can be permanently starved.
+  if(snapInflight<SNAP_MAX){
+    var due=[];
+    for(i=0;i<tiles.length;i++){ t=tiles[i]; if(!t.loading && now>=(t.nextDue||0)) due.push(t); }
+    if(due.length>1) due.sort(function(a,b){ return (a.nextDue||0)-(b.nextDue||0); });
+    for(i=0;i<due.length && snapInflight<SNAP_MAX;i++) startLoad(due[i]);
+  }
+  for(i=0;i<tiles.length;i++){                       // age a kept frame into a stale hint (no re-decode)
+    t=tiles[i];
+    if(t.lastOk && (now-t.lastOk)>SNAP_REFRESH*2 && t.el.classList.contains('live')) t.el.classList.add('stale');
+  }
+}
+function startSnaps(){                               // (re)start the one scheduler; abandons any prior generation
+  snapGen++; snapInflight=0; snapOn=true;
+  var now=Date.now();
+  tiles.forEach(function(t,i){ t.loading=false; t.nextDue=now+i*120; t.lastOk=0; t.el.classList.remove('stale'); if(t.retry==null) t.retry=SNAP_RETRY; });
+  if(snapTick) clearInterval(snapTick);
+  snapTick=setInterval(pump, 300);
+  pump();
+}
+function stopSnaps(){                                // suspend snapshots; bump gen so in-flight callbacks are no-ops
+  snapOn=false; snapGen++;
+  if(snapTick){ clearInterval(snapTick); snapTick=null; }
+}
+function kickSnaps(){                                // force a prompt, light refresh (recovery) without a full restart
+  if(!snapOn){ startSnaps(); return; }
+  var now=Date.now();
+  tiles.forEach(function(t,i){ t.retry=SNAP_RETRY; if(t.nextDue==null||t.nextDue>now) t.nextDue=now+i*80; });
+  pump();
+}
+function kickTile(i){                                // manual retry for one tile (e.g. opening an offline camera)
+  var t=tiles[i]; if(!t) return; t.fail=0; t.retry=SNAP_RETRY; t.nextDue=Date.now(); if(snapOn) pump();
+}
+function recount(){
+  var l=0,o=0; tiles.forEach(function(t){ if(t.el.classList.contains('live'))l++; else if(t.el.classList.contains('off'))o++; });
+  var h='<span>'+CAMS.length+' cams</span><span class="md">&middot;</span>';
+  if(link.state==='down') h+='<span class="bad">link down</span>';
+  else if(link.state==='wait') h+='<span class="dimm">connecting</span>';
+  else h+='<span class="ok">'+l+' live</span>'+(o?'<span class="md">&middot;</span><span class="bad">'+o+' offline</span>':'');
+  document.getElementById('cnt').innerHTML=h;
+}
+function build(){
+  CAMS.forEach(function(c,i){
+    var live=false;  // grid = lightweight JPEG snapshots (no TV HW-decoder limit); enlarge a cam for full live video
+    var d=document.createElement('div'); d.className='cam'+(live?' live':' off'); d.setAttribute('tabindex','-1');
+    d.innerHTML='<div class="card"><div class="body">'+
+      '<div class="ph"><span class="ring"></span><span class="ring r2"></span>'+GLYPH+'<div class="nm">'+c[1]+'</div><div class="msg"><span class="w">connecting&hellip;</span><span class="d">reconnecting&hellip;</span></div><div class="line"></div></div>'+
+      '<span class="tag"><span class="dot"></span><span class="lbl">'+c[1]+'</span></span><div class="shade"></div></div></div>';
+    var body=d.querySelector('.body'), el;
+    if(live){ el=document.createElement('iframe'); el.setAttribute('allow','autoplay'); el.setAttribute('tabindex','-1'); el.src=API+'/stream.html?src='+encodeURIComponent(c[0])+'&mode=mse'; }
+    else { el=document.createElement('img'); }
+    body.insertBefore(el, body.firstChild); g.appendChild(d);
+    var t={name:c[0], label:c[1], el:d, img:el, live:live, fail:0, loading:false, nextDue:0, lastOk:0, retry:SNAP_RETRY};
+    d.addEventListener('click',function(){ tap(t); });
+    tiles.push(t);
+  });
+  layout(false); recount(); startSnaps();   // one scheduler drives every snapshot tile
+}
+function initBigFrames(){ if(!bigFrames) bigFrames=[document.getElementById('bigFrame'),document.getElementById('bigFrameB')]; }
+function bigUrl(name){ return API+'/stream.html?src='+encodeURIComponent(name)+'&mode=mse&_='+Date.now(); }
+function loadFrame(i,name){ initBigFrames(); bigHeld[i]=name; try{ bigFrames[i].src=bigUrl(name); }catch(e){} }
+function blankFrame(i){ initBigFrames(); bigHeld[i]=''; try{ bigFrames[i].src='about:blank'; }catch(e){} }
+function preloadNext(){                       // connect the camera the tour will show NEXT, hidden, so its swap is instant
+  initBigFrames();
+  var i=liveIdx(sel,1); if(!isLive(i)) return;
+  var nm=tiles[i].name, other=1-bigVis;
+  if(nm!==bigCam && bigHeld[other]!==nm) loadFrame(other,nm);
+}
+function schedulePreload(){                    // warm the next camera ~3.5s before the swap (one extra decoder, briefly)
+  if(preTimer) clearTimeout(preTimer);
+  preTimer=setTimeout(preloadNext, Math.max(2000, TOURMS-3500));
+}
+function showCam(name){                         // make `name` visible, reusing the preloaded hidden buffer when it holds it
+  initBigFrames();
+  var other=1-bigVis;
+  if(bigHeld[other]===name){                    // already preloaded -> instant swap, then free the one we just hid
+    bigFrames[other].classList.add('show'); bigFrames[bigVis].classList.remove('show');
+    bigVis=other; blankFrame(1-bigVis);
+  } else {                                      // not preloaded -> load into the visible buffer
+    loadFrame(bigVis,name); bigFrames[bigVis].classList.add('show'); bigFrames[other].classList.remove('show'); blankFrame(other);
+  }
+  bigCam=name; bigRetry=0;
+  if(tour) schedulePreload();
+}
+function openBig(t){
+  if(!t) return;                             // no tile (e.g. no live camera): never dereference undefined
+  var wasFull=full;
+  document.getElementById('bigName').textContent=(tour?(tourPaused?'❚❚ PAUSED · ':'◉ LIVE TOUR · '):'')+t.label;
+  document.getElementById('bigPh').textContent=t.label;
+  document.getElementById('big').classList.add('on');
+  full=true; document.body.classList.add('full');
+  if(!wasFull) stopSnaps();                  // full screen: suspend the overview grid so the live player has headroom
+  if(t.name!==bigCam) showCam(t.name);       // swap to the preloaded buffer when ready (instant); else load it
+  else if(tour) schedulePreload();           // same camera (e.g. pausing a tour): just keep the next one warm
+  legend();
+}
+function recoverBig(){                        // bounded restart of the live player on an observable failure signal
+  if(!full || !bigCam || bigRetry>=BIG_RETRY_MAX) return;
+  bigRetry++; loadFrame(bigVis, bigCam);     // reload the visible buffer in place
+}
+function closeBig(){
+  document.getElementById('big').classList.remove('on');
+  if(preTimer){ clearTimeout(preTimer); preTimer=null; }
+  bigGen++; blankFrame(0); blankFrame(1);    // release both decoders
+  if(bigFrames){ bigFrames[0].classList.remove('show'); bigFrames[1].classList.remove('show'); }
+  bigCam=null; bigRetry=0; bigVis=0; full=false; document.body.classList.remove('full'); legend();
+  if(!wallPaused) startSnaps();              // overview visible again: resume the one scheduler
+  focusGrid();
+}
+// reliability: periodically self-heal. The overview is snapshots (the scheduler already retries per
+// tile), so here we re-arm any backed-off tiles and, if a camera is full-screen, bounded-restart it.
+function refreshStreams(){ kickSnaps(); recoverBig(); }
+setInterval(refreshStreams, 180000);
+
+/* ---------- centre link probe: drives the connecting / reconnecting placeholders ---------- */
+var link={state:'wait',fails:0};
+function setLink(s){
+  var was=link.state; if(was===s) return; link.state=s;
+  document.body.classList.toggle('wait',s==='wait'); document.body.classList.toggle('down',s==='down');
+  document.getElementById('cardLink').innerHTML='<i></i>'+(s==='up'?'link up &middot; '+CAMS.length+' streams':(s==='down'?'link down &middot; retrying':'connecting&hellip;'));
+  if(s==='up'&&was==='down'){ kickSnaps(); bigRetry=0; recoverBig(); }   // centre recovered: refresh snapshots now and restart the live player if one is open
+  recount();
+}
+// Two independent signals per round; one success = up, both failing twice in a row = down.
+var probeN=0;
+function probe(){
+  var left=2, decided=false;
+  function good(){ if(decided) return; decided=true; link.fails=0; setLink('up'); setTimeout(probe,8000); }
+  function fail(){ if(decided||--left>0) return; decided=true; link.fails++; if(link.fails>=2) setLink('down'); setTimeout(probe, link.state==='up'?2500:(link.state==='wait'?1500:4000)); }
+  // 1) any HTTP answer from go2rtc at all (opaque response, no CORS needed)
+  try{
+    var ctl=(window.AbortController?new AbortController():null), to=setTimeout(function(){ if(ctl) ctl.abort(); },4000);
+    fetch(API+'/',{mode:'no-cors',cache:'no-store',signal:ctl?ctl.signal:undefined}).then(function(){ clearTimeout(to); good(); },function(){ clearTimeout(to); fail(); });
+  }catch(e){ fail(); }
+  // 2) a real frame from one of the cameras (rotates through the list)
+  var im=new Image(), cam=CAMS[(probeN++)%CAMS.length][0], t2=setTimeout(function(){ im.onload=im.onerror=null; fail(); },6000);
+  im.onload=function(){ clearTimeout(t2); good(); }; im.onerror=function(){ clearTimeout(t2); fail(); };
+  im.src=API+'/api/frame.jpeg?src='+encodeURIComponent(cam)+'&_='+Date.now();
+}
+
+/* ---------- remote: D-pad + OK + BACK ---------- */
+var LEG={grid:[['OK','full screen'],['◀ ▶ ▲ ▼','select'],['BACK','exit']],spot:[['◀ ▶','camera'],['OK','full screen'],['BACK','overview']],full:[['◀ ▶','skip'],['OK','live tour'],['BACK','overview']]};
+function legend(){ var k=full?'full':mode; document.getElementById('legend').innerHTML=LEG[k].map(function(p){ return '<span class="key"><kbd>'+p[0]+'</kbd>'+p[1]+'</span>'; }).join(''); }
+function focusGrid(){ try{ g.focus({preventScroll:true}); }catch(e){ try{ g.focus(); }catch(e2){} } }
+function setMode(m){ mode=m; document.body.classList.toggle('grid',m==='grid'); document.body.classList.toggle('spot',m==='spot'); legend(); layout(true); }
+function moveGrid(dx,dy){
+  var n=tiles.length,c=cols,i=sel;
+  if(dx>0) i=Math.min(n-1,sel+1); else if(dx<0) i=Math.max(0,sel-1);
+  else if(dy>0) i=(sel+c<n)?sel+c:((Math.floor(sel/c)<Math.floor((n-1)/c))?n-1:sel);
+  else if(dy<0) i=(sel-c>=0)?sel-c:sel;
+  return i;
+}
+function wallMove(dx,dy){
+  var n=tiles.length; if(!n) return;
+  if(!full&&mode==='grid'){ var i=moveGrid(dx,dy); if(i!==sel){ sel=i; markSel(); } }
+  else if(full){ tourGo((dx||dy)>0?1:-1); }   // manual skip in full screen; doesn't force the tour on
+  else { sel=(sel+((dx||dy)>0?1:-1)+n)%n; layout(true); }
+  focusGrid();
+}
+function wallEnter(){
+  if(full){                                   // OK in full screen toggles the live tour (auto-cycle) on/off
+    if(tour){ stopTour(); } else { tourActive=true; tourPaused=false; armTour(); }
+    document.getElementById('bigName').textContent=(tour?'◉ LIVE TOUR · ':'')+tiles[sel].label;
+    legend(); return;
+  }
+  stopTour();                                 // grid: OK opens the camera you're ON (not CAM 1) and holds it
+  var i=isLive(sel)?sel:firstLive();
+  if(i>=0){ sel=i; openBig(tiles[sel]); }
+  focusGrid();
+}
+function wallBack(){ if(full){ stopTour(); closeBig(); return true; } if(mode==='spot'){ setMode('grid'); return true; } return false; }   // false: nothing to step out of (the activity exits)
+function tap(t){ var i=tiles.indexOf(t); if(full||i<0) return; kickTile(i); if(mode==='grid'){ sel=i; setMode('spot'); } else if(i===sel) openBig(t); else { sel=i; layout(true); } focusGrid(); }
+document.addEventListener('keydown',function(e){
+  var k=e.key||'', kc=e.keyCode;
+  if(k==='Escape'||k==='GoBack'||k==='BrowserBack'||kc===27){ if(wallBack()) e.preventDefault(); return; }
+  if(k==='Enter'||kc===13||kc===23){ e.preventDefault(); wallEnter(); return; }
+  var d={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[k]||{37:[-1,0],39:[1,0],38:[0,-1],40:[0,1]}[kc];
+  if(d){ e.preventDefault(); wallMove(d[0],d[1]); }
+});
+window.addEventListener('resize',function(){ layout(false); });
+window.addEventListener('focus',focusGrid);
+
+/* ---------- lifecycle: WallActivity.onPause/onResume and the WebView's visibility drive these.
+   pauseWall() stops all app-owned work (scheduler, tour timer, live decoder) so a backgrounded wall
+   isn't polling cameras or holding a decoder; resumeWall() restarts exactly one scheduler generation
+   (or reloads the full-screen player), discarding any stale callbacks. Both are idempotent. */
+function pauseWall(){
+  if(wallPaused) return; wallPaused=true;
+  stopSnaps();
+  if(tour){ clearInterval(tour); tour=null; }            // keep tourActive/tourPaused so resume can restore the tour
+  if(full){ bigGen++; blankFrame(0); blankFrame(1); }  // release both decoders while backgrounded
+}
+function resumeWall(){
+  if(!wallPaused) return; wallPaused=false;
+  if(full && bigCam) showCam(bigCam); else startSnaps();
+  if(tourActive && !tour) armTour();
+}
+document.addEventListener('visibilitychange',function(){ if(document.hidden) pauseWall(); else resumeWall(); });
+setInterval(function(){ document.getElementById('clock').textContent=new Date().toTimeString().slice(0,8); },1000);
+document.getElementById('clock').textContent=new Date().toTimeString().slice(0,8);
+document.getElementById('cardHost').textContent=HOST+' · '+CAMS.length+' cameras';
+Array.prototype.forEach.call(document.querySelectorAll('.gslot'),function(s){ s.innerHTML=GLYPH; });
+legend(); build(); focusGrid(); probe(); setTimeout(startTour, 6500);
+</script></body></html>
