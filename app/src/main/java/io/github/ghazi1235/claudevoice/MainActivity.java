@@ -91,6 +91,7 @@ public class MainActivity extends android.app.Activity {
     private static final String KEY_PUNICA = "punica_key";
     private static final String KEY_PUNICA_VOICE = "punica_voice";
     private static final String KEY_SAY = "say";
+    private static final String KEY_ASK = "ask";   // test hook: run text through onHeard (incl. camera vision)
     private static final String PUNICA_URL = "https://punica.tn/api/v1/audio/speech";
     private static final String PUNICA_MODEL = "dido";
     private static final String PUNICA_DEFAULT_VOICE = "nour_tn";
@@ -157,6 +158,7 @@ public class MainActivity extends android.app.Activity {
     // shut-down executor (the RejectedExecutionException crash) or touch a destroyed view.
     private volatile boolean destroyed;
     private boolean busy;
+    private boolean retriedListen;  // one quiet retry per listen on a transient recognizer-busy error
     private boolean ttsReady;
 
     /**
@@ -168,8 +170,9 @@ public class MainActivity extends android.app.Activity {
     private static final Locale[] INPUT_LANGS = {
             new Locale("ar", "TN"),
             Locale.FRANCE,
+            new Locale("en", "US"),
     };
-    private static final String[] INPUT_LABELS = {"الدارجة", "Français"};
+    private static final String[] INPUT_LABELS = {"الدارجة", "Français", "English"};
     private static final String KEY_LANG = "input_lang";
 
     private int lang;
@@ -218,6 +221,7 @@ public class MainActivity extends android.app.Activity {
 
         refreshIdleHint();
         maybeSay(getIntent());
+        maybeAsk(getIntent());
     }
 
     @Override
@@ -228,6 +232,7 @@ public class MainActivity extends android.app.Activity {
         storeCamHostFrom(intent);
         refreshIdleHint();
         maybeSay(intent);
+        maybeAsk(intent);
     }
 
     /**
@@ -276,6 +281,24 @@ public class MainActivity extends android.app.Activity {
         intent.removeExtra(KEY_SAY);
         final String text = say;
         ui.post(() -> speak(text));
+    }
+
+    /**
+     * Test hook: if the launch Intent carries --es ask "<text>", MAX processes it exactly as if it
+     * had heard it - through onHeard, so the camera-vision routing and the model call run. Lets the
+     * whole pipeline be driven over adb without the microphone. The extra is removed after use.
+     */
+    private void maybeAsk(Intent intent) {
+        if (intent == null) {
+            return;
+        }
+        String ask = intent.getStringExtra(KEY_ASK);
+        if (TextUtils.isEmpty(ask)) {
+            return;
+        }
+        intent.removeExtra(KEY_ASK);
+        final String text = ask.trim();
+        ui.post(() -> onHeard(text));
     }
 
     /**
@@ -329,18 +352,27 @@ public class MainActivity extends android.app.Activity {
         refreshIdleHint();
     }
 
-    /**
-     * Picks the voice for one reply from the script Claude answered in, rather than from the
-     * input language: a question asked in French can be answered in Derja and the other way
-     * round, and a wrong voice makes the reply unintelligible. Arabic script wins whenever it
-     * appears, because a Derja sentence normally carries French words inside it.
-     */
-    private static Locale voiceFor(String text) {
+    /** True if any character is Arabic script - the mark of a Derja reply. */
+    private static boolean hasArabic(String text) {
         for (int i = 0; i < text.length(); i++) {
-            if (Character.UnicodeBlock.of(text.charAt(i))
-                    == Character.UnicodeBlock.ARABIC) {
-                return new Locale("ar", "TN");
+            if (Character.UnicodeBlock.of(text.charAt(i)) == Character.UnicodeBlock.ARABIC) {
+                return true;
             }
+        }
+        return false;
+    }
+
+    /**
+     * Picks the Android TTS locale for one reply. Arabic script -> Tunisian Arabic. Otherwise the
+     * reply is English or French; the input toggle says which (the reply comes back in the spoken
+     * language), and English is given a British accent for the JARVIS sound.
+     */
+    private Locale voiceFor(String text) {
+        if (hasArabic(text)) {
+            return new Locale("ar", "TN");
+        }
+        if ("en".equals(INPUT_LANGS[lang].getLanguage())) {
+            return Locale.UK;
         }
         return Locale.FRANCE;
     }
@@ -351,17 +383,20 @@ public class MainActivity extends android.app.Activity {
      * the best available on this TV.
      */
     private boolean applyVoice(Locale wanted) {
-        int result = tts.setLanguage(wanted);
-        if (result != TextToSpeech.LANG_MISSING_DATA
-                && result != TextToSpeech.LANG_NOT_SUPPORTED) {
+        if (voiceOk(wanted)) {
             return true;
         }
-        if ("ar".equals(wanted.getLanguage())) {
-            result = tts.setLanguage(new Locale("ar"));
-            return result != TextToSpeech.LANG_MISSING_DATA
-                    && result != TextToSpeech.LANG_NOT_SUPPORTED;
+        switch (wanted.getLanguage()) {
+            case "ar": return voiceOk(new Locale("ar"));              // ar-TN -> plain Arabic (MSA)
+            case "en": return voiceOk(Locale.US) || voiceOk(Locale.ENGLISH);  // en-GB -> en-US -> en
+            case "fr": return voiceOk(new Locale("fr"));              // fr-FR -> plain French
+            default:   return false;
         }
-        return false;
+    }
+
+    private boolean voiceOk(Locale l) {
+        int r = tts.setLanguage(l);
+        return r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED;
     }
 
     /**
@@ -403,6 +438,7 @@ public class MainActivity extends android.app.Activity {
             case KeyEvent.KEYCODE_ENTER:
             case KeyEvent.KEYCODE_SEARCH:
             case KeyEvent.KEYCODE_VOICE_ASSIST:
+                retriedListen = false;  // a fresh press gets a fresh retry budget
                 startListening();
                 return true;
             case KeyEvent.KEYCODE_DPAD_LEFT:
@@ -445,9 +481,6 @@ public class MainActivity extends android.app.Activity {
     }
 
     private void startListening() {
-        if (busy) {
-            return;
-        }
         if (TextUtils.isEmpty(apiKey())) {
             state.setText(R.string.hint_no_key);
             return;
@@ -464,11 +497,20 @@ public class MainActivity extends android.app.Activity {
             return;
         }
 
+        // Barge-in: OK always listens NOW, even while MAX is mid-thought or mid-sentence, instead
+        // of being ignored because `busy`. Tear down whatever is in flight first - a recognizer
+        // left undestroyed makes the next start fail with ERROR_RECOGNIZER_BUSY (the "busy" the
+        // person hears), and the current clip / any reply still coming must not speak over the new
+        // listen.
+        if (recognizer != null) {
+            try { recognizer.cancel(); recognizer.destroy(); } catch (Exception ignored) { }
+            recognizer = null;
+        }
         if (tts != null) {
             tts.stop();
         }
         stopPlayback();  // a new listen interrupts any Punica clip, as tts.stop() does the fallback
-        speakGen++;      // and invalidates a Punica fetch that may still be in flight
+        speakGen++;      // and invalidates a Punica fetch / stale reply that may still be in flight
         busy = true;
         armIdle();
         heard.setText("");
@@ -487,6 +529,9 @@ public class MainActivity extends android.app.Activity {
         String tag = INPUT_LANGS[lang].toLanguageTag();
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, tag);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, tag);
+        // Prefer online recognition: this TV has no offline (Soda) model for some languages, so the
+        // on-device recognizer fails to initialize ("ConfigStatus 3"); the network path works.
+        intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
         recognizer.startListening(intent);
     }
 
@@ -513,6 +558,11 @@ public class MainActivity extends android.app.Activity {
         orbFx.mode(OrbFx.THINKING);
 
         final int gen = speakGen;   // a new listen / new conversation bumps this -> a stale answer is dropped
+        final Cam cam = resolveCamera(text);
+        if (cam != null) {          // a camera question -> look at a still frame, not the chat model
+            lookAtCamera(text, cam, gen);
+            return;
+        }
         submit(io, () -> {
             String answer;
             try {
@@ -538,6 +588,177 @@ public class MainActivity extends android.app.Activity {
     }
 
     /**
+     * Answers a question about one camera by sending a still frame from go2rtc to the vision model.
+     * The snapshot fetch and the model call both block, so they run on the io worker; the answer is
+     * then spoken on the UI thread under the same generation token as a normal reply, so a new listen
+     * drops a stale answer. The image is never stored - only the spoken sentence is kept.
+     */
+    private void lookAtCamera(String question, Cam cam, int gen) {
+        final String host = prefs().getString(KEY_CAM_HOST, WallActivity.DEFAULT_CAM_HOST);
+        submit(io, () -> {
+            String answer;
+            try {
+                byte[] jpeg = fetchSnapshot(host, cam.src);
+                if (jpeg == null || jpeg.length < 1200) {
+                    answer = cam.label + " is not sending a picture right now.";
+                } else {
+                    Log.i(TAG, "vision " + cam.src + " snapshot " + jpeg.length + " bytes");
+                    ClaudeClient c = claude;
+                    if (c == null) {
+                        c = new ClaudeClient(apiKey());
+                        claude = c;
+                    }
+                    answer = c.describeImage(question, jpeg);
+                }
+            } catch (ClaudeClient.ApiException e) {
+                answer = e.getMessage();
+            } catch (Exception e) {
+                Log.w(TAG, "camera vision failed", e);
+                answer = "I could not read " + cam.label + " just now.";
+            }
+            final String spoken = answer;
+            ui.post(() -> {
+                if (gen == speakGen && !isFinishing() && !destroyed) {
+                    speak(spoken);
+                }
+            });
+        });
+    }
+
+    /** Pulls one JPEG still from go2rtc's frame.jpeg endpoint. Returns null on any failure. */
+    private static byte[] fetchSnapshot(String host, String src) {
+        HttpURLConnection c = null;
+        try {
+            URL url = new URL("http://" + host + ":1984/api/frame.jpeg?src=" + src + "&w=800");
+            c = (HttpURLConnection) url.openConnection();
+            c.setConnectTimeout(5000);
+            c.setReadTimeout(12000);
+            if (c.getResponseCode() >= 400) {
+                return null;
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try (InputStream in = c.getInputStream()) {
+                byte[] buf = new byte[16384];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    out.write(buf, 0, n);
+                    if (out.size() > 4_000_000) {   // a still is tens of KB; cap a runaway read
+                        break;
+                    }
+                }
+            }
+            return out.toByteArray();
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (c != null) {
+                c.disconnect();
+            }
+        }
+    }
+
+    /** One go2rtc source and the name MAX speaks for it. */
+    private static final class Cam {
+        final String src;
+        final String label;
+        Cam(String src, String label) {
+            this.src = src;
+            this.label = label;
+        }
+    }
+
+    /** The 18 cameras, in the same order and with the same go2rtc ids as the wall (wall-snap.html). */
+    private static final Cam[] CAMERAS = {
+            new Cam("dahua_ch1", "Camera 1"), new Cam("dahua_ch2", "Camera 2"),
+            new Cam("dahua_ch3", "Camera 3"), new Cam("dahua_ch4", "Camera 4"),
+            new Cam("dahua_ch5", "Camera 5"), new Cam("dahua_ch6", "Camera 6"),
+            new Cam("dahua_ch7", "Camera 7"),
+            new Cam("uni102", "Uniview 102"), new Cam("uni165", "Uniview 165"),
+            new Cam("uni170", "Uniview 170"),
+            new Cam("inova1", "Inova 1"), new Cam("inova2", "Inova 2"),
+            new Cam("inova3", "Inova 3"), new Cam("inova4", "Inova 4"),
+            new Cam("inova5", "Inova 5"), new Cam("inova6", "Inova 6"),
+            new Cam("inova7", "Inova 7"), new Cam("inova8", "Inova 8")
+    };
+
+    /**
+     * The camera a spoken request refers to, or null if it is not a camera question. Understands
+     * "camera 3" / "caméra 3" / Arabic "كاميرا 3" (Cameras 1-7), "inova 8", and "uniview 102/165/170"
+     * in Derja, French or English. A camera word with no clear number falls back to the first of its
+     * kind. This is a lightweight keyword match, so a sentence that only mentions a camera word also
+     * routes here; tighten the gate if that proves noisy.
+     */
+    private static Cam resolveCamera(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String t = normalizeForMatch(raw);
+        boolean inova = t.contains("inova");
+        boolean uni = t.contains("uniview") || t.contains("univue");
+        boolean cam = t.contains("camera") || t.contains("kamera")
+                || t.contains("كاميرا")   // كاميرا
+                || t.contains("كاميرة");   // كاميرة
+        if (!inova && !uni && !cam) {
+            return null;
+        }
+        int n = firstNumber(t);
+        if (inova) {
+            return findCam("inova" + (n >= 1 && n <= 8 ? n : 1));
+        }
+        if (uni) {
+            return findCam("uni" + (n == 102 || n == 165 || n == 170 ? n : 102));
+        }
+        return CAMERAS[n >= 1 && n <= 7 ? n - 1 : 0];   // generic "camera N" -> Cameras 1-7
+    }
+
+    private static Cam findCam(String src) {
+        for (Cam c : CAMERAS) {
+            if (c.src.equals(src)) {
+                return c;
+            }
+        }
+        return CAMERAS[0];
+    }
+
+    /** Lowercase, strip the French accents MAX hears, and map Arabic-Indic digits to ASCII. */
+    private static String normalizeForMatch(String s) {
+        s = s.toLowerCase(Locale.ROOT);
+        StringBuilder b = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (ch >= '٠' && ch <= '٩') {
+                ch = (char) ('0' + (ch - '٠'));        // ٠-٩ Arabic-Indic digits
+            } else if (ch >= '۰' && ch <= '۹') {
+                ch = (char) ('0' + (ch - '۰'));        // ۰-۹ extended
+            } else if (ch == 'é' || ch == 'è' || ch == 'ê' || ch == 'ë') {
+                ch = 'e';                                   // é è ê ë -> e (caméra)
+            }
+            b.append(ch);
+        }
+        return b.toString();
+    }
+
+    /** The first run of digits in the text as an int, or -1 if there is none. */
+    private static int firstNumber(String t) {
+        int i = 0, len = t.length();
+        while (i < len && !Character.isDigit(t.charAt(i))) {
+            i++;
+        }
+        if (i >= len) {
+            return -1;
+        }
+        int j = i;
+        while (j < len && Character.isDigit(t.charAt(j))) {
+            j++;
+        }
+        try {
+            return Integer.parseInt(t.substring(i, j));
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /**
      * Speaks one reply. Punica TTS is the real Tunisian voice and comes first: its request runs
      * off the main thread and the returned WAV is played with AudioTrack. Android TextToSpeech is
      * the fallback, used whenever no Punica key is set or the fetch fails for any reason, so a
@@ -547,11 +768,16 @@ public class MainActivity extends android.app.Activity {
     private void speak(String text) {
         armIdle();  // the screensaver waits a full idle period after the reply starts
         reply.setText(text);
+        Log.i(TAG, "reply[" + text.length() + "]: "
+                + (text.length() > 140 ? text.substring(0, 140) : text));
         busy = false;
         final int gen = ++speakGen;  // any older in-flight Punica fetch / clip is now stale
         final String key = punicaKey();
-        if (TextUtils.isEmpty(key)) {
-            speakAndroid(text);  // no Punica configured: straight to the Android voice
+        // Punica is a Tunisian voice: perfect for a Derja (Arabic-script) reply, wrong for English
+        // or French. Only Derja goes to Punica; EN/FR go to the Android voice, where English gets a
+        // British (JARVIS) accent. No key -> Android for everything.
+        if (TextUtils.isEmpty(key) || !hasArabic(text)) {
+            speakAndroid(text);
             return;
         }
         final String voice = punicaVoice();
@@ -582,12 +808,17 @@ public class MainActivity extends android.app.Activity {
         }
         state.setText(R.string.state_speaking);
         orbFx.mode(OrbFx.SPEAKING);
-        if (!applyVoice(voiceFor(text))) {
+        Locale v = voiceFor(text);
+        if (!applyVoice(v)) {
             // The reply still shows on screen; only the voice is missing.
             reply.setText(text + "\n\n" + getString(R.string.no_voice));
             refreshIdleHint();
             return;
         }
+        // The butler cadence: a measured pace, and a slightly deepened pitch on the Latin (EN/FR)
+        // voices for the JARVIS timbre. Arabic (MSA) is left at its natural pitch.
+        tts.setPitch("ar".equals(v.getLanguage()) ? 1.0f : 0.9f);
+        tts.setSpeechRate(0.98f);
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "reply");
         // No utterance callback: the hint goes back to idle once speech has had time to start,
         // which is all the screen needs to say.
@@ -884,6 +1115,17 @@ public class MainActivity extends android.app.Activity {
         @Override
         public void onError(int error) {
             release();
+            // ERROR_RECOGNIZER_BUSY / ERROR_CLIENT on this TV is almost always a transient start
+            // race, not a real failure. Retry once, quietly, instead of telling the person the
+            // recognizer is "busy" - which is exactly the complaint. onReadyForSpeech clears the
+            // flag, so a listen that genuinely gets going still gets its own retry next time.
+            if ((error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY
+                    || error == SpeechRecognizer.ERROR_CLIENT) && !retriedListen) {
+                retriedListen = true;
+                busy = false;
+                ui.postDelayed(MainActivity.this::startListening, 350);
+                return;
+            }
             show(errorText(error));
         }
 
@@ -894,7 +1136,7 @@ public class MainActivity extends android.app.Activity {
             }
         }
 
-        @Override public void onReadyForSpeech(Bundle params) { }
+        @Override public void onReadyForSpeech(Bundle params) { retriedListen = false; }
         @Override public void onBeginningOfSpeech() { }
         @Override public void onRmsChanged(float rms) { orbFx.level(rms); }
         @Override public void onBufferReceived(byte[] buffer) { }

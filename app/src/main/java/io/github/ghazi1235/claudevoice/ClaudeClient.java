@@ -1,5 +1,6 @@
 package io.github.ghazi1235.claudevoice;
 
+import android.util.Base64;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -46,19 +47,63 @@ class ClaudeClient {
 
     /** Replies are spoken aloud, so they have to stay short and free of markup. */
     private static final String SYSTEM_PROMPT =
-            "You are a voice assistant on a television in a living room in Tunisia. Your reply "
-                    + "is read aloud by a text-to-speech engine, so answer in one or two short "
-                    + "sentences of plain spoken language. Never use markdown, lists, code "
-                    + "blocks, emoji or special characters. If a question needs a long answer, "
-                    + "give the short version and offer to go deeper.\n\n"
-                    + "Language: reply in the same language the person used. They speak "
-                    + "Tunisian Derja and French, and mix the two in one sentence as Tunisians "
-                    + "normally do; follow their mix rather than correcting it. Write Derja in "
-                    + "Arabic script, never in Latin letters or numerals (not 3, 7 or 9), "
-                    + "because the speech engine reads Arabic script and would mispronounce "
-                    + "transliteration. Keep French words that Tunisians normally say in French "
-                    + "(for example portable, voiture, rendez-vous) in French. If you cannot "
-                    + "tell which language was used, answer in Derja.";
+            "You are MAX, the household's AI majordomo on the family television in a home in "
+                    + "Tunisia. Carry yourself with the poise, precision and dry wit of a classic "
+                    + "butler-AI in the spirit of JARVIS: unfailingly composed, courteous and "
+                    + "quietly clever. You serve the whole household - parents, children and "
+                    + "guests - so be warm and respectful to each, never cold and never servile."
+                    + "\n\n"
+                    + "Manner: calm, confident and efficient. Answer the question that was "
+                    + "actually asked, say useful things plainly, and anticipate what the person "
+                    + "really needs. A light, understated touch of humour is welcome when it fits "
+                    + "- never clowning, never smug. You may address the person courteously (a "
+                    + "light 'sir' or 'madam' in English, 'monsieur' or 'madame' in French, a "
+                    + "respectful form in Derja) but do not overuse it, and never assume anyone's "
+                    + "gender - drop the honorific when you are unsure. Never lecture or moralise, "
+                    + "and never brush someone off with an empty 'I can't help with that'; if "
+                    + "something is beyond you, say so briefly and offer the nearest thing you "
+                    + "can do. When unsure, say so with composure rather than bluffing.\n\n"
+                    + "Your reply is read aloud by a text-to-speech engine, so speak in plain, "
+                    + "natural sentences - usually one to three - with no markdown, lists, code, "
+                    + "emoji, asterisks or special characters. Give a complete, useful answer in "
+                    + "that space; only offer to go further when the matter is genuinely large."
+                    + "\n\n"
+                    + "Language: reply in the SAME language the person used, and match their "
+                    + "everyday register, never a stiff formal one. They speak Tunisian Derja, "
+                    + "French and English and freely mix them inside one sentence; follow their "
+                    + "mix rather than flattening it.\n\n"
+                    + "Tunisian Derja is its OWN language, NOT Modern Standard Arabic: an Arabic "
+                    + "base woven through with French, plus Italian, Amazigh, Turkish and English "
+                    + "borrowings, spoken in genuinely Tunisian words and grammar. When you answer "
+                    + "in Derja, talk the way Tunisians really talk (متاع، برشا، باهي، ياسر، نجّم، "
+                    + "فمّا، توة، ثمّة، يزّي) and NEVER in Fus'ha/MSA. Use the French and other "
+                    + "borrowed words Tunisians normally use (rendez-vous, normalement, portable, "
+                    + "famille) instead of digging up a classical Arabic equivalent that would "
+                    + "sound foreign to them.\n\n"
+                    + "Write the whole Derja reply in ARABIC SCRIPT, the borrowed words included - "
+                    + "spell those phonetically in Arabic letters the way Tunisians text them "
+                    + "(رنديفو = rendez-vous, نورمالمون = normalement, بورتابل = portable, فاميّ = "
+                    + "famille) - and never in Latin letters or numerals (not 3, 7 or 9), because "
+                    + "the speech engine reads Arabic script and would mispronounce Latin letters "
+                    + "or transliteration. A fully French or fully English reply is written "
+                    + "normally in its own Latin script. If you truly cannot tell which language "
+                    + "was used, answer in Derja.";
+
+    /** The scene a single CCTV still shows, spoken aloud. Events only — never who or how they feel. */
+    private static final String VISION_PROMPT =
+            "You are the eyes of a security-camera assistant on a television in Tunisia, looking at "
+                    + "one still frame from a single CCTV camera. Say plainly what is happening in "
+                    + "the scene, in one or two short spoken sentences: whether anyone is present and "
+                    + "roughly how many, what they appear to be doing, and anything unusual or unsafe "
+                    + "(an open door, someone on the floor, smoke, a gathering crowd). The reply is "
+                    + "read aloud by a speech engine, so use plain spoken language with no markdown, "
+                    + "lists, emoji or special characters. Reply in the same language the person used "
+                    + "- Tunisian Derja in Arabic script (never Latin letters or numerals for Derja), "
+                    + "French, or English, or their mix; if unsure, answer in Derja. Do NOT identify "
+                    + "or name "
+                    + "anyone, do NOT guess age, gender, emotion or mood, and do NOT describe how "
+                    + "people look beyond what is needed to say what is happening. If the frame is "
+                    + "black, frozen or too unclear to read, say the camera image is not clear.";
 
     /** How many past turns to resend. Keeps latency and token use bounded on a TV. */
     private static final int MAX_HISTORY = 12;
@@ -135,9 +180,12 @@ class ClaudeClient {
                 body.put("messages", new JSONArray(snapshot));
             }
             if (gemini) {
-                // Gemini flash "thinks" by default, which spends the whole token budget and returns
-                // an empty answer. A little reasoning keeps quality but leaves room for the reply.
-                body.put("reasoning_effort", "low");
+                // Gemini flash "thinks" by default and the thinking shares the token budget with
+                // the reply. Medium reasoning makes the answers noticeably smarter; the larger
+                // ceiling keeps the spoken reply from being starved by the thinking (too small a
+                // budget here is what returned empty answers at the old 512).
+                body.put("max_tokens", 2048);
+                body.put("reasoning_effort", "medium");
             }
 
             HttpURLConnection c = (HttpURLConnection) new URL(endpoint).openConnection();
@@ -188,6 +236,96 @@ class ClaudeClient {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Looks at one still image and answers a question about it, in the person's language. Stateless:
+     * the image and its answer are NOT kept in the conversation history (images are large and this is
+     * one-shot). Needs a backend that can see: Gemini (the deployed default) and an OpenAI-compatible
+     * vision URL use the image_url form; an Anthropic key uses an image content block; a Groq text
+     * key is rejected up front. Throws on any transport or API error, like {@link #ask}.
+     */
+    String describeImage(String question, byte[] jpeg) throws Exception {
+        boolean urlMode = apiKey.startsWith("http");
+        boolean groq = apiKey.startsWith("gsk_");
+        boolean gemini = apiKey.startsWith("AIza") || apiKey.startsWith("AQ.");
+        boolean openai = urlMode || groq || gemini;
+        if (groq) {
+            // Groq's default text model is blind; don't send a request that can only 400.
+            throw new Exception("This key cannot see images. Use a Gemini key for camera vision.");
+        }
+
+        String endpoint;
+        String model;
+        if (urlMode) {
+            int sep = apiKey.indexOf("||");
+            endpoint = sep >= 0 ? apiKey.substring(0, sep) : apiKey;
+            model = sep >= 0 ? apiKey.substring(sep + 2) : DEFAULT_OPENAI_MODEL;
+        } else if (gemini) {
+            endpoint = GEMINI_ENDPOINT;
+            model = GEMINI_MODEL;
+        } else {
+            endpoint = ENDPOINT;
+            model = MODEL;
+        }
+
+        String b64 = Base64.encodeToString(jpeg, Base64.NO_WRAP);
+        String q = (question == null || question.trim().isEmpty())
+                ? "What is happening on this camera right now?" : question.trim();
+
+        JSONObject body = new JSONObject();
+        body.put("model", model);
+        body.put("max_tokens", 512);
+        if (openai) {
+            JSONArray content = new JSONArray();
+            content.put(new JSONObject().put("type", "text").put("text", q));
+            content.put(new JSONObject().put("type", "image_url")
+                    .put("image_url", new JSONObject().put("url", "data:image/jpeg;base64," + b64)));
+            JSONArray msgs = new JSONArray();
+            msgs.put(new JSONObject().put("role", "system").put("content", VISION_PROMPT));
+            msgs.put(new JSONObject().put("role", "user").put("content", content));
+            body.put("messages", msgs);
+            if (gemini) {
+                body.put("reasoning_effort", "low");
+            }
+        } else {
+            JSONArray content = new JSONArray();
+            content.put(new JSONObject().put("type", "text").put("text", q));
+            content.put(new JSONObject().put("type", "image").put("source",
+                    new JSONObject().put("type", "base64")
+                            .put("media_type", "image/jpeg").put("data", b64)));
+            JSONArray msgs = new JSONArray();
+            msgs.put(new JSONObject().put("role", "user").put("content", content));
+            body.put("system", VISION_PROMPT);
+            body.put("messages", msgs);
+        }
+
+        HttpURLConnection c = (HttpURLConnection) new URL(endpoint).openConnection();
+        try {
+            c.setRequestMethod("POST");
+            c.setRequestProperty("content-type", "application/json");
+            if (gemini) {
+                c.setRequestProperty("authorization", "Bearer " + apiKey);
+            } else if (!urlMode) {
+                c.setRequestProperty("x-api-key", apiKey);
+                c.setRequestProperty("anthropic-version", API_VERSION);
+            }
+            c.setConnectTimeout(10000);
+            c.setReadTimeout(30000);
+            c.setDoOutput(true);
+            try (OutputStream os = c.getOutputStream()) {
+                os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+            }
+            int status = c.getResponseCode();
+            String response = read(status >= 400 ? c.getErrorStream() : c.getInputStream());
+            if (status >= 400) {
+                throw new ApiException(status, describe(status, response));
+            }
+            return openai ? firstChoice(new JSONObject(response))
+                          : firstText(new JSONObject(response));
+        } finally {
+            c.disconnect();
         }
     }
 
