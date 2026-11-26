@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The MAX menu: a neon list on dark glass over the dimmed voice screen, driven by the D-pad
+     (▲▼ move, OK select, BACK close). Selecting Status slides a second glass panel in beside it.
+     Kept INVISIBLE rather than GONE while closed, so the rows are laid out and the focus highlight
+     can be placed before the first fade-in.
+
+     IDs bound by MainActivity.MaxMenu: menu, menuScrim, menuPanel, menuKeyCap, menuFocus,
+     menuList, menuRow0..3, menuIc0..3, menuLabel0..3, menuSub0..3, menuValue1 (language),
+     menuValue3 (status), menuStatus, statusVersion, statusVoice, statusBrain, statusInput,
+     statusLink, statusKeys. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/menu"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:visibility="invisible">
+
+    <View
+        android:id="@+id/menuScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/menu_scrim" />
+
+    <!-- ===== The list panel ===== -->
+    <LinearLayout
+        android:id="@+id/menuPanel"
+        android:layout_width="400dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|center_vertical"
+        android:layout_marginStart="84dp"
+        android:background="@drawable/glass_panel"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="22dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="18dp">
+
+        <!-- Header: wordmark · MENU, and the key that opens it on the right -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="78dp"
+                    android:layout_height="28dp"
+                    android:contentDescription="@string/app_name"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_wordmark" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="14dp"
+                    android:background="#3305D9E8" />
+
+                <TextView
+                    style="@style/Tag"
+                    android:layout_marginStart="14dp"
+                    android:letterSpacing="0.3"
+                    android:shadowColor="#00000000"
+                    android:shadowRadius="0"
+                    android:text="@string/menu_title"
+                    android:textColor="@color/text_dim" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/menuKeyCap"
+                style="@style/KeyCap"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:shadowColor="#80FCEE0A"
+                android:shadowRadius="8"
+                android:text="@string/key_menu"
+                android:textColor="@color/acid" />
+        </RelativeLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/rule_soft" />
+
+        <!-- Rows, with the sliding focus highlight behind them -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:clipChildren="false">
+
+            <View
+                android:id="@+id/menuFocus"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:background="@drawable/menu_focus" />
+
+            <LinearLayout
+                android:id="@+id/menuList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- 0 · Cameras -->
+                <LinearLayout
+                    android:id="@+id/menuRow0"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="18dp">
+
+                    <ImageView
+                        android:id="@+id/menuIc0"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_menu_cameras" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="18dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/menuLabel0"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-light"
+                            android:includeFontPadding="false"
+                            android:text="@string/menu_cameras"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp" />
+
+                        <TextView
+                            android:id="@+id/menuSub0"
+                            style="@style/Tag"
+                            android:layout_marginTop="4dp"
+                            android:ellipsize="end"
+                            android:letterSpacing="0.14"
+                            android:maxLines="1"
+                            android:shadowColor="#00000000"
+                            android:shadowRadius="0"
+                            android:text="@string/menu_cameras_sub"
+                            android:textColor="@color/text_dim"
+                            android:textSize="9.5sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/menuValue0"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:fontFamily="sans-serif-light"
+                        android:includeFontPadding="false"
+                        android:text="@string/menu_chevron"
+                        android:textColor="@color/neon_cyan"
+                        android:textSize="20sp" />
+                </LinearLayout>
+
+                <!-- 1 · Language (value = the current input language) -->
+                <LinearLayout
+                    android:id="@+id/menuRow1"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="18dp">
+
+                    <ImageView
+                        android:id="@+id/menuIc1"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_menu_language" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="18dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/menuLabel1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-light"
+                            android:includeFontPadding="false"
+                            android:text="@string/menu_language"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp" />
+
+                        <TextView
+                            android:id="@+id/menuSub1"
+                            style="@style/Tag"
+                            android:layout_marginTop="4dp"
+                            android:ellipsize="end"
+                            android:letterSpacing="0.14"
+                            android:maxLines="1"
+                            android:shadowColor="#00000000"
+                            android:shadowRadius="0"
+                            android:text="@string/menu_language_sub"
+                            android:textColor="@color/text_dim"
+                            android:textSize="9.5sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/menuValue1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:fontFamily="sans-serif-light"
+                        android:includeFontPadding="false"
+                        android:shadowColor="#6605D9E8"
+                        android:shadowRadius="8"
+                        android:textColor="@color/neon_cyan"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <!-- 2 · New conversation -->
+                <LinearLayout
+                    android:id="@+id/menuRow2"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="18dp">
+
+                    <ImageView
+                        android:id="@+id/menuIc2"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_menu_new" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="18dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/menuLabel2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-light"
+                            android:includeFontPadding="false"
+                            android:text="@string/menu_new"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp" />
+
+                        <TextView
+                            android:id="@+id/menuSub2"
+                            style="@style/Tag"
+                            android:layout_marginTop="4dp"
+                            android:ellipsize="end"
+                            android:letterSpacing="0.14"
+                            android:maxLines="1"
+                            android:shadowColor="#00000000"
+                            android:shadowRadius="0"
+                            android:text="@string/menu_new_sub"
+                            android:textColor="@color/text_dim"
+                            android:textSize="9.5sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 3 · Status (value = online / no key) -->
+                <LinearLayout
+                    android:id="@+id/menuRow3"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="18dp">
+
+                    <ImageView
+                        android:id="@+id/menuIc3"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_menu_status" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="18dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/menuLabel3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-light"
+                            android:includeFontPadding="false"
+                            android:text="@string/menu_status"
+                            android:textColor="@color/text_primary"
+                            android:textSize="17sp" />
+
+                        <TextView
+                            android:id="@+id/menuSub3"
+                            style="@style/Tag"
+                            android:layout_marginTop="4dp"
+                            android:ellipsize="end"
+                            android:letterSpacing="0.14"
+                            android:maxLines="1"
+                            android:shadowColor="#00000000"
+                            android:shadowRadius="0"
+                            android:text="@string/menu_status_sub"
+                            android:textColor="@color/text_dim"
+                            android:textSize="9.5sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/menuValue3"
+                        style="@style/Tag"
+                        android:layout_marginStart="12dp"
+                        android:shadowColor="#00000000"
+                        android:shadowRadius="0"
+                        android:textColor="@color/neon_cyan"
+                        android:textSize="10sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/rule_soft" />
+
+        <!-- Footer legend -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/KeyCap"
+                android:text="@string/key_updown" />
+
+            <TextView
+                style="@style/KeyLabel"
+                android:maxLines="1"
+                android:text="@string/menu_move" />
+
+            <TextView
+                style="@style/KeyCap"
+                android:layout_marginStart="16dp"
+                android:text="@string/key_ok" />
+
+            <TextView
+                style="@style/KeyLabel"
+                android:maxLines="1"
+                android:text="@string/menu_select" />
+
+            <TextView
+                style="@style/KeyCap"
+                android:layout_marginStart="16dp"
+                android:text="@string/key_back" />
+
+            <TextView
+                style="@style/KeyLabel"
+                android:maxLines="1"
+                android:text="@string/menu_close" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ===== Status panel, beside the list; shown by the Status item ===== -->
+    <LinearLayout
+        android:id="@+id/menuStatus"
+        android:layout_width="396dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|center_vertical"
+        android:layout_marginStart="502dp"
+        android:alpha="0"
+        android:background="@drawable/glass_panel"
+        android:orientation="vertical"
+        android:paddingStart="26dp"
+        android:paddingTop="22dp"
+        android:paddingEnd="26dp"
+        android:paddingBottom="22dp"
+        android:visibility="invisible">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="78dp"
+                android:layout_height="28dp"
+                android:contentDescription="@string/app_name"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_wordmark" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="14dp"
+                android:background="#33FF2A6D" />
+
+            <TextView
+                style="@style/Tag"
+                android:layout_marginStart="14dp"
+                android:letterSpacing="0.3"
+                android:shadowColor="#70FF2A6D"
+                android:text="@string/status_title"
+                android:textColor="@color/neon_pink" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/rule_soft" />
+
+        <TextView
+            style="@style/Tag"
+            android:layout_marginTop="14dp"
+            android:shadowColor="#00000000"
+            android:shadowRadius="0"
+            android:text="@string/status_version"
+            android:textColor="@color/text_dim" />
+
+        <TextView
+            android:id="@+id/statusVersion"
+            style="@style/StatusValue" />
+
+        <TextView
+            style="@style/Tag"
+            android:layout_marginTop="14dp"
+            android:shadowColor="#00000000"
+            android:shadowRadius="0"
+            android:text="@string/status_voice"
+            android:textColor="@color/text_dim" />
+
+        <TextView
+            android:id="@+id/statusVoice"
+            style="@style/StatusValue" />
+
+        <TextView
+            style="@style/Tag"
+            android:layout_marginTop="14dp"
+            android:shadowColor="#00000000"
+            android:shadowRadius="0"
+            android:text="@string/status_brain"
+            android:textColor="@color/text_dim" />
+
+        <TextView
+            android:id="@+id/statusBrain"
+            style="@style/StatusValue" />
+
+        <TextView
+            style="@style/Tag"
+            android:layout_marginTop="14dp"
+            android:shadowColor="#00000000"
+            android:shadowRadius="0"
+            android:text="@string/status_input"
+            android:textColor="@color/text_dim" />
+
+        <TextView
+            android:id="@+id/statusInput"
+            style="@style/StatusValue" />
+
+        <TextView
+            style="@style/Tag"
+            android:layout_marginTop="14dp"
+            android:shadowColor="#00000000"
+            android:shadowRadius="0"
+            android:text="@string/status_link"
+            android:textColor="@color/text_dim" />
+
+        <TextView
+            android:id="@+id/statusLink"
+            style="@style/StatusValue" />
+
+        <TextView
+            style="@style/Tag"
+            android:layout_marginTop="14dp"
+            android:shadowColor="#00000000"
+            android:shadowRadius="0"
+            android:text="@string/status_keys"
+            android:textColor="@color/text_dim" />
+
+        <TextView
+            android:id="@+id/statusKeys"
+            style="@style/StatusValue" />
+    </LinearLayout>
+</FrameLayout>

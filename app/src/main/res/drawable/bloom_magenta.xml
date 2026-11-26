@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ambient light: a large soft magenta bloom that drifts across the screensaver. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:centerX="0.5"
+        android:centerY="0.5"
+        android:gradientRadius="50%p"
+        android:startColor="#A6FF2A6D"
+        android:centerColor="#33FF2A6D"
+        android:endColor="#00FF2A6D" />
+</shape>

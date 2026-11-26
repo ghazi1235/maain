@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Night City palette: neon magenta + electric cyan + a drop of acid yellow on near-black. -->
+    <color name="bg">#05010E</color>
+    <color name="bg_deep">#0D0221</color>
+
+    <color name="neon_pink">#FF2A6D</color>
+    <color name="neon_magenta">#FF0080</color>
+    <color name="neon_cyan">#05D9E8</color>
+    <color name="neon_cyan_bright">#00F0FF</color>
+    <color name="acid">#FCEE0A</color>
+
+    <color name="text_primary">#F2FBFF</color>
+    <color name="text_secondary">#9BE9F2</color>
+    <color name="text_dim">#6F5B91</color>
+    <color name="text_hint">#3E3760</color>
+    <color name="state_accent">#00F0FF</color>
+
+    <!-- Orb core (idle): magenta plasma. -->
+    <color name="accent">#FF2A6D</color>
+    <color name="accent_light">#FFE6F1</color>
+    <color name="accent_deep">#C1004F</color>
+    <color name="accent_dark">#3B0626</color>
+
+    <!-- Orb core (listening): cyan plasma. -->
+    <color name="hot_light">#EEFFFF</color>
+    <color name="hot">#05D9E8</color>
+    <color name="hot_deep">#0A4C73</color>
+    <color name="hot_dark">#04223B</color>
+
+    <color name="chip_fill">#C00A0318</color>
+    <color name="panel_fill">#B0070114</color>
+
+    <!-- On-screen menu: the dimming scrim over the voice screen and the resting (unfocused) row. -->
+    <color name="menu_scrim">#D905010E</color>
+    <color name="menu_label_dim">#C6BFDD</color>
+    <color name="menu_icon_dim">#8478A8</color>
+</resources>

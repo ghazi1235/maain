@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status LED next to the brand line: a cyan point of light that pulses slowly. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:centerX="0.5"
+        android:centerY="0.5"
+        android:gradientRadius="50%p"
+        android:startColor="#FFFFFFFF"
+        android:centerColor="#FF00F0FF"
+        android:endColor="#0005D9E8" />
+    <size
+        android:width="10dp"
+        android:height="10dp" />
+</shape>

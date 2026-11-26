@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Magenta bloom behind the core: a wide faint halo plus a tighter brighter one. Fills the
+     whole orb stage; its alpha and scale are what "breathe". -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:gradientRadius="50%p"
+                android:startColor="#A6FF2A6D"
+                android:centerColor="#30FF2A6D"
+                android:endColor="#00FF2A6D" />
+        </shape>
+    </item>
+    <item
+        android:left="48dp"
+        android:top="48dp"
+        android:right="48dp"
+        android:bottom="48dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:gradientRadius="50%p"
+                android:startColor="#D9FF5C93"
+                android:centerColor="#55FF2A6D"
+                android:endColor="#00FF2A6D" />
+        </shape>
+    </item>
+</layer-list>

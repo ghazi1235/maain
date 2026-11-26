@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pill for the input-language chip: dark glass with a cyan-to-magenta hairline. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#8C05D9E8"
+                android:centerColor="#4A8A4AD9"
+                android:endColor="#8CFF2A6D" />
+            <corners android:radius="26dp" />
+        </shape>
+    </item>
+    <item
+        android:left="1dp"
+        android:top="1dp"
+        android:right="1dp"
+        android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#EB0A0318" />
+            <corners android:radius="25dp" />
+        </shape>
+    </item>
+</layer-list>

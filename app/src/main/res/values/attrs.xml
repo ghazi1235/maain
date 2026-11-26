@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- NeonGridView: a faint perspective floor with a soft horizon haze, drifting slowly. -->
+    <declare-styleable name="NeonGridView">
+        <attr name="horizon" format="float" />
+        <attr name="cycleMs" format="integer" />
+        <attr name="gridAlpha" format="float" />
+        <attr name="gridColor" format="color" />
+        <attr name="horizonColor" format="color" />
+    </declare-styleable>
+</resources>

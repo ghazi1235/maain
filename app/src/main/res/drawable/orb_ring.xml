@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Thinking" arc: a comet-tailed sweep from cyan to white that spins around the core.
+     For a 156dp view: inner radius 156/2.12 ≈ 74dp, thickness 156/44 ≈ 3.5dp. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="ring"
+    android:innerRadiusRatio="2.12"
+    android:thicknessRatio="44"
+    android:useLevel="false">
+    <gradient
+        android:type="sweep"
+        android:startColor="#00FFFFFF"
+        android:centerColor="#8005D9E8"
+        android:endColor="#FFF0FDFF" />
+</shape>

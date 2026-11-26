@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Idle screensaver, now an art gallery: a full-bleed painting (the whole artwork, fit on screen
+     over a blurred darkened copy of itself) crossfades every ~45s, with the clock, weather and
+     rotating news carried along the bottom over a soft scrim. When no painting can be loaded
+     (offline) the neon room underneath shows through instead — drifting blooms, a luminous floor,
+     motes and the resting core. MainActivity fades the whole thing in after a while idle.
+
+     IDs bound by MainActivity.Screensaver: saverGrid, saverDrift, saverBloomA/B/C, saverCore,
+     saverCoreHot, saverGlow, saverGlowHot, saverOrbitA/B, saverTiltA, saverStatus, saverMotes,
+     saverClock, saverDate, plus the gallery: saverSlot0/1, saverBlur0/1, saverPaint0/1,
+     saverScrimTop/Bottom, saverWeather, saverNews, saverCaption, saverStage. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/screensaver"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:alpha="0"
+    android:background="@color/bg"
+    android:clipChildren="false"
+    android:visibility="gone">
+
+    <!-- ===== Neon room (offline fallback; covered by a painting when one loads) ===== -->
+
+    <View
+        android:id="@+id/saverBloomA"
+        android:layout_width="640dp"
+        android:layout_height="640dp"
+        android:layout_gravity="center"
+        android:alpha="0.75"
+        android:background="@drawable/bloom_magenta"
+        android:translationX="-280dp"
+        android:translationY="-60dp" />
+
+    <View
+        android:id="@+id/saverBloomB"
+        android:layout_width="720dp"
+        android:layout_height="720dp"
+        android:layout_gravity="center"
+        android:alpha="0.7"
+        android:background="@drawable/bloom_cyan"
+        android:translationX="320dp"
+        android:translationY="140dp" />
+
+    <View
+        android:id="@+id/saverBloomC"
+        android:layout_width="540dp"
+        android:layout_height="540dp"
+        android:layout_gravity="center"
+        android:alpha="0.6"
+        android:background="@drawable/bloom_violet"
+        android:translationX="60dp"
+        android:translationY="-200dp" />
+
+    <io.github.ghazi1235.claudevoice.NeonGridView
+        android:id="@+id/saverGrid"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:cycleMs="20000"
+        app:gridAlpha="0.20"
+        app:gridColor="@color/neon_pink"
+        app:horizon="0.74"
+        app:horizonColor="@color/neon_cyan" />
+
+    <FrameLayout
+        android:id="@+id/saverMotes"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false" />
+
+    <!-- The resting core, centred (offline centrepiece; hidden while a painting shows) -->
+    <FrameLayout
+        android:id="@+id/saverStage"
+        android:layout_width="224dp"
+        android:layout_height="224dp"
+        android:layout_gravity="center"
+        android:clipChildren="false">
+
+        <View
+            android:id="@+id/saverGlow"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0.7"
+            android:background="@drawable/orb_glow" />
+
+        <View
+            android:id="@+id/saverGlowHot"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0"
+            android:background="@drawable/orb_glow_hot" />
+
+        <FrameLayout
+            android:id="@+id/saverTiltB"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:rotation="62"
+            android:scaleY="0.46">
+
+            <View
+                android:id="@+id/saverOrbitB"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0.5"
+                android:background="@drawable/orbit_magenta" />
+        </FrameLayout>
+
+        <View
+            android:id="@+id/saverCore"
+            android:layout_width="112dp"
+            android:layout_height="112dp"
+            android:layout_gravity="center"
+            android:background="@drawable/orb" />
+
+        <View
+            android:id="@+id/saverCoreHot"
+            android:layout_width="112dp"
+            android:layout_height="112dp"
+            android:layout_gravity="center"
+            android:alpha="0"
+            android:background="@drawable/orb_hot" />
+
+        <FrameLayout
+            android:id="@+id/saverTiltA"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:rotation="-24"
+            android:scaleY="0.30">
+
+            <View
+                android:id="@+id/saverOrbitA"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0.9"
+                android:background="@drawable/orbit_cyan" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <!-- ===== Gallery: two crossfading slots. Each = blurred darkened fill + the whole artwork ===== -->
+
+    <FrameLayout
+        android:id="@+id/saverSlot0"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0">
+
+        <ImageView
+            android:id="@+id/saverBlur0"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <ImageView
+            android:id="@+id/saverPaint0"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/saverSlot1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0">
+
+        <ImageView
+            android:id="@+id/saverBlur1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop" />
+
+        <ImageView
+            android:id="@+id/saverPaint1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter" />
+    </FrameLayout>
+
+    <!-- ===== Scrims for readability over any painting ===== -->
+
+    <View
+        android:id="@+id/saverScrimTop"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_gravity="top"
+        android:background="@drawable/scrim_top" />
+
+    <View
+        android:id="@+id/saverScrimBottom"
+        android:layout_width="match_parent"
+        android:layout_height="340dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/scrim_bottom" />
+
+    <!-- ===== Overlays: clock / date / weather / news along the bottom (drifts for burn-in) ===== -->
+
+    <LinearLayout
+        android:id="@+id/saverDrift"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="40dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/saverClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-thin"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.02"
+            android:shadowColor="#CC000913"
+            android:shadowRadius="26"
+            android:textColor="@color/text_primary"
+            android:textSize="62sp" />
+
+        <TextView
+            android:id="@+id/saverDate"
+            style="@style/Tag"
+            android:layout_marginTop="6dp"
+            android:letterSpacing="0.32"
+            android:shadowColor="#CC000913"
+            android:shadowRadius="14"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/saverWeather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:alpha="0"
+            android:fontFamily="sans-serif-light"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.04"
+            android:shadowColor="#B3000913"
+            android:shadowRadius="16"
+            android:textColor="@color/text_secondary"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/saverNews"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:alpha="0"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-light"
+            android:gravity="center_horizontal"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:maxWidth="840dp"
+            android:shadowColor="#B3000913"
+            android:shadowRadius="14"
+            android:textColor="@color/text_primary"
+            android:textDirection="anyRtl"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/saverStatus"
+            style="@style/Tag"
+            android:layout_marginTop="16dp"
+            android:alpha="0.72"
+            android:letterSpacing="0.3"
+            android:shadowColor="#80FF2A6D"
+            android:text="@string/saver_status"
+            android:textColor="@color/neon_pink"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Brand, top-left -->
+    <ImageView
+        android:layout_width="78dp"
+        android:layout_height="28dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="44dp"
+        android:layout_marginTop="34dp"
+        android:alpha="0.5"
+        android:contentDescription="@string/app_name"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_wordmark" />
+
+    <!-- Painting caption (title · artist), low-key under the brand -->
+    <TextView
+        android:id="@+id/saverCaption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="45dp"
+        android:layout_marginTop="74dp"
+        android:alpha="0"
+        android:fontFamily="sans-serif-light"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.06"
+        android:maxWidth="560dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:shadowColor="#C8000913"
+        android:shadowRadius="16"
+        android:textColor="@color/text_secondary"
+        android:textSize="12.5sp" />
+</FrameLayout>

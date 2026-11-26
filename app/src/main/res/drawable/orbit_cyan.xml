@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Orbital: a hairline ring carrying one bright cyan spark with a long fading tail. The view is
+     squashed and tilted by its parent so the ring reads as an ellipse in perspective, and the
+     spark travels around it. For a 230dp view: thickness 230/150 ≈ 1.5dp. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="ring"
+    android:innerRadiusRatio="2.03"
+    android:thicknessRatio="150"
+    android:useLevel="false">
+    <gradient
+        android:type="sweep"
+        android:startColor="#0005D9E8"
+        android:centerColor="#2605D9E8"
+        android:endColor="#FFC2F8FF" />
+</shape>

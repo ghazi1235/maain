@@ -1,49 +1,425 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 10-foot layout for a 1920x1080 panel at 320dpi (a 960x540dp canvas).
+     MainActivity binds @id/state, @id/orb, @id/heard, @id/reply, plus the cosmetic layer:
+     @id/backdrop, @id/langLabel, @id/led, @id/orbHot, @id/orbGlow, @id/orbGlowHot, @id/orbHalo,
+     @id/orbRing, @id/orbitA, @id/orbitB, @id/orbitTiltA, @id/content, @id/legendMenuKey, the
+     menu overlay (menu_overlay.xml) and the screensaver. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center_horizontal"
-    android:padding="48dp"
-    android:background="#0B0D11">
+    android:background="@drawable/bg_screen">
 
-    <TextView
-        android:id="@+id/state"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/hint_idle"
-        android:textColor="#CFFFCF"
-        android:textSize="28sp"
-        android:layout_marginBottom="24dp" />
-
-    <View
-        android:id="@+id/orb"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:background="@drawable/orb"
-        android:layout_marginBottom="32dp" />
-
-    <TextView
-        android:id="@+id/heard"
+    <!-- Luminous floor, far behind everything -->
+    <io.github.ghazi1235.claudevoice.NeonGridView
+        android:id="@+id/backdrop"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#8A94A6"
-        android:textSize="20sp"
-        android:gravity="center"
-        android:layout_marginBottom="16dp" />
+        android:layout_height="match_parent"
+        app:cycleMs="16000"
+        app:gridAlpha="0.16"
+        app:gridColor="@color/neon_pink"
+        app:horizon="0.77"
+        app:horizonColor="@color/neon_cyan" />
 
-    <ScrollView
-        android:id="@+id/scroll"
+    <LinearLayout
+        android:id="@+id/content"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingStart="48dp"
+        android:paddingTop="26dp"
+        android:paddingEnd="48dp"
+        android:paddingBottom="18dp">
 
-        <TextView
-            android:id="@+id/reply"
+        <!-- Top bar: brand on the left, input-language chip on the right -->
+        <RelativeLayout
             android:layout_width="match_parent"
+            android:layout_height="40dp">
+
+            <LinearLayout
+                android:id="@+id/brand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="96dp"
+                    android:layout_height="34dp"
+                    android:contentDescription="@string/app_name"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_wordmark" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="18dp"
+                    android:layout_marginStart="18dp"
+                    android:background="#3305D9E8" />
+
+                <View
+                    android:id="@+id/led"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:layout_marginStart="18dp"
+                    android:layout_marginEnd="9dp"
+                    android:background="@drawable/dot_accent" />
+
+                <TextView
+                    style="@style/Tag"
+                    android:letterSpacing="0.2"
+                    android:shadowColor="#00000000"
+                    android:shadowRadius="0"
+                    android:text="@string/brand_tag"
+                    android:textColor="@color/text_dim" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/langGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Tag"
+                    android:layout_marginEnd="14dp"
+                    android:shadowColor="#00000000"
+                    android:shadowRadius="0"
+                    android:text="@string/chip_lang"
+                    android:textColor="@color/text_dim" />
+
+                <LinearLayout
+                    android:id="@+id/langChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/chip"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="18dp"
+                    android:paddingTop="7dp"
+                    android:paddingEnd="18dp"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:text="@string/chip_prev"
+                        android:textColor="@color/neon_cyan"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/langLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:fontFamily="sans-serif-light"
+                        android:includeFontPadding="false"
+                        android:shadowColor="#6605D9E8"
+                        android:shadowRadius="8"
+                        android:textColor="@color/text_primary"
+                        android:textSize="17sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:text="@string/chip_next"
+                        android:textColor="@color/neon_pink"
+                        android:textSize="18sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </RelativeLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/rule_soft" />
+
+        <!-- Body: the core and its state on the left, the conversation on the right -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="6dp"
+            android:layout_weight="1"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="300dp"
+                android:layout_height="match_parent"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <!-- Core stage (back to front): blooms, magenta orbital, halo, core, hot core,
+                     thinking arc, cyan orbital -->
+                <FrameLayout
+                    android:id="@+id/orbStage"
+                    android:layout_width="260dp"
+                    android:layout_height="260dp"
+                    android:clipChildren="false">
+
+                    <View
+                        android:id="@+id/orbGlow"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:alpha="0.6"
+                        android:background="@drawable/orb_glow" />
+
+                    <View
+                        android:id="@+id/orbGlowHot"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:alpha="0"
+                        android:background="@drawable/orb_glow_hot" />
+
+                    <!-- a faint mirror of the core on the floor below it -->
+                    <View
+                        android:id="@+id/orbReflection"
+                        android:layout_width="124dp"
+                        android:layout_height="124dp"
+                        android:layout_gravity="center"
+                        android:alpha="0.13"
+                        android:background="@drawable/orb"
+                        android:scaleX="0.92"
+                        android:scaleY="-0.42"
+                        android:translationY="98dp" />
+
+                    <FrameLayout
+                        android:id="@+id/orbitTiltB"
+                        android:layout_width="230dp"
+                        android:layout_height="230dp"
+                        android:layout_gravity="center"
+                        android:rotation="62"
+                        android:scaleY="0.46">
+
+                        <View
+                            android:id="@+id/orbitB"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:alpha="0.55"
+                            android:background="@drawable/orbit_magenta" />
+                    </FrameLayout>
+
+                    <View
+                        android:id="@+id/orbHalo"
+                        android:layout_width="156dp"
+                        android:layout_height="156dp"
+                        android:layout_gravity="center"
+                        android:alpha="0.18"
+                        android:background="@drawable/orb_halo" />
+
+                    <View
+                        android:id="@+id/orb"
+                        android:layout_width="124dp"
+                        android:layout_height="124dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/orb" />
+
+                    <View
+                        android:id="@+id/orbHot"
+                        android:layout_width="124dp"
+                        android:layout_height="124dp"
+                        android:layout_gravity="center"
+                        android:alpha="0"
+                        android:background="@drawable/orb_hot" />
+
+                    <View
+                        android:id="@+id/orbRing"
+                        android:layout_width="156dp"
+                        android:layout_height="156dp"
+                        android:layout_gravity="center"
+                        android:alpha="0"
+                        android:background="@drawable/orb_ring" />
+
+                    <FrameLayout
+                        android:id="@+id/orbitTiltA"
+                        android:layout_width="230dp"
+                        android:layout_height="230dp"
+                        android:layout_gravity="center"
+                        android:rotation="-24"
+                        android:scaleY="0.30">
+
+                        <View
+                            android:id="@+id/orbitA"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:alpha="0.9"
+                            android:background="@drawable/orbit_cyan" />
+                    </FrameLayout>
+                </FrameLayout>
+
+                <!-- State: "Press OK and speak" / Listening… / Thinking… / Speaking… -->
+                <TextView
+                    android:id="@+id/state"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="sans-serif-light"
+                    android:gravity="center"
+                    android:letterSpacing="0.22"
+                    android:shadowColor="#9900F0FF"
+                    android:shadowRadius="12"
+                    android:text="@string/hint_idle"
+                    android:textAllCaps="true"
+                    android:textColor="@color/state_accent"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <!-- Conversation: dark glass, hairline edge -->
+            <FrameLayout
+                android:id="@+id/panel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:background="@drawable/glass_panel">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:paddingStart="28dp"
+                    android:paddingTop="22dp"
+                    android:paddingEnd="28dp"
+                    android:paddingBottom="22dp">
+
+                    <TextView
+                        style="@style/Tag"
+                        android:text="@string/tag_you" />
+
+                    <!-- What was heard: the question, light and quiet -->
+                    <TextView
+                        android:id="@+id/heard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:ellipsize="end"
+                        android:fontFamily="sans-serif-light"
+                        android:hint="@string/hint_heard"
+                        android:lineSpacingMultiplier="1.2"
+                        android:maxLines="2"
+                        android:minLines="2"
+                        android:shadowColor="#6605D9E8"
+                        android:shadowRadius="8"
+                        android:textAlignment="textStart"
+                        android:textColor="@color/text_secondary"
+                        android:textColorHint="@color/text_hint"
+                        android:textDirection="anyRtl"
+                        android:textSize="21sp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="14dp"
+                        android:layout_marginBottom="14dp"
+                        android:background="@drawable/divider_soft" />
+
+                    <TextView
+                        style="@style/Tag"
+                        android:shadowColor="#70FF2A6D"
+                        android:text="@string/tag_max"
+                        android:textColor="@color/neon_pink" />
+
+                    <!-- The answer: large, legible, direction-aware (Derja RTL, French LTR) -->
+                    <ScrollView
+                        android:id="@+id/scroll"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_weight="1"
+                        android:fadingEdgeLength="36dp"
+                        android:overScrollMode="never"
+                        android:requiresFadingEdge="vertical"
+                        android:scrollbars="none">
+
+                        <TextView
+                            android:id="@+id/reply"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-light"
+                            android:hint="@string/hint_reply"
+                            android:lineSpacingMultiplier="1.3"
+                            android:shadowColor="#5A05D9E8"
+                            android:shadowRadius="10"
+                            android:textAlignment="textStart"
+                            android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_hint"
+                            android:textDirection="anyRtl"
+                            android:textSize="25sp" />
+                    </ScrollView>
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- Remote legend, deliberately quiet: key cap + what it does -->
+        <LinearLayout
+            android:id="@+id/legend"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#E6ECF5"
-            android:textSize="22sp"
-            android:lineSpacingMultiplier="1.25" />
-    </ScrollView>
-</LinearLayout>
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/KeyCap"
+                android:text="@string/key_ok" />
+
+            <TextView
+                style="@style/KeyLabel"
+                android:text="@string/legend_speak" />
+
+            <TextView
+                style="@style/KeyCap"
+                android:layout_marginStart="34dp"
+                android:text="@string/key_arrows" />
+
+            <TextView
+                style="@style/KeyLabel"
+                android:text="@string/legend_language" />
+
+            <TextView
+                style="@style/KeyCap"
+                android:layout_marginStart="34dp"
+                android:text="@string/key_stop" />
+
+            <TextView
+                style="@style/KeyLabel"
+                android:text="@string/legend_new" />
+
+            <!-- The yellow colour key, drawn as its dot: the physical MENU button never reaches the
+                 app on this TV (MainActivity.MENU_KEY). -->
+            <TextView
+                android:id="@+id/legendMenuKey"
+                style="@style/KeyCap"
+                android:layout_marginStart="34dp"
+                android:shadowColor="#80FCEE0A"
+                android:shadowRadius="8"
+                android:text="@string/key_menu"
+                android:textColor="@color/acid" />
+
+            <TextView
+                style="@style/KeyLabel"
+                android:text="@string/legend_menu" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- On-screen menu (Cameras · Language · New conversation · Status), opened by the menu key.
+         Below the screensaver so the saver still covers it. -->
+    <include layout="@layout/menu_overlay" />
+
+    <!-- Idle screensaver, shown by MainActivity after a while without a key press -->
+    <include layout="@layout/screensaver" />
+</FrameLayout>

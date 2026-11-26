@@ -1,8 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Leanback requires a banner; a flat tile keeps the APK free of binary assets. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#15181E" />
-    <corners android:radius="8dp" />
-    <size android:width="320dp" android:height="180dp" />
-    <stroke android:width="2dp" android:color="#CFFFCF" />
-</shape>
+<!-- Leanback banner (320x180dp): the core over the wordmark on the same background as the app.
+     Stays pure XML so the APK carries no bitmaps. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="90"
+                android:startColor="@color/bg_deep"
+                android:endColor="@color/bg" />
+            <corners android:radius="10dp" />
+            <size
+                android:width="320dp"
+                android:height="180dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.40"
+                android:gradientRadius="70%p"
+                android:startColor="#B34A0F49"
+                android:centerColor="#402A0838"
+                android:endColor="#0005010E" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+    <!-- glow -->
+    <item
+        android:gravity="center_horizontal|top"
+        android:top="2dp"
+        android:width="150dp"
+        android:height="150dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:gradientRadius="50%p"
+                android:startColor="#B3FF2A6D"
+                android:centerColor="#33FF2A6D"
+                android:endColor="#00FF2A6D" />
+        </shape>
+    </item>
+    <!-- core -->
+    <item
+        android:gravity="center_horizontal|top"
+        android:top="44dp"
+        android:width="66dp"
+        android:height="66dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.40"
+                android:centerY="0.36"
+                android:gradientRadius="74%p"
+                android:startColor="@color/accent_light"
+                android:centerColor="@color/accent"
+                android:endColor="@color/accent_dark" />
+            <stroke
+                android:width="1dp"
+                android:color="#A6FF7FAE" />
+        </shape>
+    </item>
+    <!-- halo -->
+    <item
+        android:gravity="center_horizontal|top"
+        android:top="36dp"
+        android:width="82dp"
+        android:height="82dp">
+        <shape android:shape="oval">
+            <solid android:color="#00000000" />
+            <stroke
+                android:width="1.5dp"
+                android:color="#8005D9E8" />
+        </shape>
+    </item>
+    <!-- wordmark -->
+    <item
+        android:drawable="@drawable/ic_wordmark"
+        android:gravity="center_horizontal|bottom"
+        android:bottom="22dp"
+        android:width="100dp"
+        android:height="36dp" />
+</layer-list>

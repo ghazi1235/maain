@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soft dark gradient along the top edge, so the wordmark and caption stay readable over any
+     painting. Dark at the very top, fading to clear. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:type="linear"
+        android:startColor="#CC05010E"
+        android:centerColor="#5A05010E"
+        android:endColor="#0005010E" />
+</shape>
