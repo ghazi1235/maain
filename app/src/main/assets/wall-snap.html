@@ -189,6 +189,8 @@ var tour=null, tourPaused=false, tourActive=false, TOURMS=12000;
 var wallPaused=false;                                  // app background (onPause) state
 var bigCam=null, bigGen=0, bigRetry=0, BIG_RETRY_MAX=3; // full-screen live player state
 var bigFrames=null, bigVis=0, bigHeld=['',''], preTimer=null;  // double-buffered iframes: preload the next tour camera for an instant swap
+var listen=false;   // on-demand "listen": in full screen, swap an Inova cam to its _av (video+audio) source
+function hasAudio(name){ return /^inova\d/.test(name); }   // only the Inova cams have a parallel inovaN_av go2rtc source
 function liveIdx(from,dir){ var n=tiles.length,i=from; for(var k=0;k<n;k++){ i=((i+dir)%n+n)%n; if(!tiles[i].el.classList.contains('off')) return i; } return from; }
 function firstLive(){ for(var i=0;i<tiles.length;i++){ if(!tiles[i].el.classList.contains('off')) return i; } return -1; }
 function isLive(i){ return i>=0 && tiles[i] && !tiles[i].el.classList.contains('off'); }
@@ -357,7 +359,18 @@ function build(){
   layout(false); recount(); startSnaps();   // one scheduler drives every snapshot tile
 }
 function initBigFrames(){ if(!bigFrames) bigFrames=[document.getElementById('bigFrame'),document.getElementById('bigFrameB')]; }
-function bigUrl(name){ return API+'/stream.html?src='+encodeURIComponent(name)+'&mode=mse&_='+Date.now(); }
+function bigUrl(name){ var s=(listen&&hasAudio(name))?name+'_av':name; return API+'/stream.html?src='+encodeURIComponent(s)+'&mode=mse&_='+Date.now(); }
+function setBigName(){ var lbl=(tiles[sel]?tiles[sel].label:''); var pre=tour?(tourPaused?'❚❚ PAUSED · ':'◉ LIVE TOUR · '):''; try{ document.getElementById('bigName').textContent=(listen?'🔊 ':'')+pre+lbl; }catch(e){} }
+function setListen(on){                              // on-demand audio: reload the full-screen cam with/without its _av source
+  if(!full||!bigCam) return;
+  on=!!(on&&hasAudio(bigCam));
+  if(on===listen){ setBigName(); return; }
+  listen=on;
+  blankFrame(1-bigVis);                              // drop any preload warmed with the old audio state
+  loadFrame(bigVis,bigCam);                          // reload the visible buffer (brief reconnect) now carrying audio, or not
+  setBigName();
+  if(tour) schedulePreload();
+}
 function loadFrame(i,name){ initBigFrames(); bigHeld[i]=name; try{ bigFrames[i].src=bigUrl(name); }catch(e){} }
 function blankFrame(i){ initBigFrames(); bigHeld[i]=''; try{ bigFrames[i].src='about:blank'; }catch(e){} }
 function preloadNext(){                       // connect the camera the tour will show NEXT, hidden, so its swap is instant
@@ -379,13 +392,13 @@ function showCam(name){                         // make `name` visible, reusing 
   } else {                                      // not preloaded -> load into the visible buffer
     loadFrame(bigVis,name); bigFrames[bigVis].classList.add('show'); bigFrames[other].classList.remove('show'); blankFrame(other);
   }
-  bigCam=name; bigRetry=0;
+  bigCam=name; bigRetry=0; setBigName();
   if(tour) schedulePreload();
 }
 function openBig(t){
   if(!t) return;                             // no tile (e.g. no live camera): never dereference undefined
   var wasFull=full;
-  document.getElementById('bigName').textContent=(tour?(tourPaused?'❚❚ PAUSED · ':'◉ LIVE TOUR · '):'')+t.label;
+  setBigName();
   document.getElementById('bigPh').textContent=t.label;
   document.getElementById('big').classList.add('on');
   full=true; document.body.classList.add('full');
@@ -403,7 +416,7 @@ function closeBig(){
   if(preTimer){ clearTimeout(preTimer); preTimer=null; }
   bigGen++; blankFrame(0); blankFrame(1);    // release both decoders
   if(bigFrames){ bigFrames[0].classList.remove('show'); bigFrames[1].classList.remove('show'); }
-  bigCam=null; bigRetry=0; bigVis=0; full=false; document.body.classList.remove('full'); legend();
+  bigCam=null; bigRetry=0; bigVis=0; listen=false; full=false; document.body.classList.remove('full'); legend();
   if(!wallPaused) startSnaps();              // overview visible again: resume the one scheduler
   focusGrid();
 }
@@ -439,7 +452,7 @@ function probe(){
 }
 
 /* ---------- remote: D-pad + OK + BACK ---------- */
-var LEG={grid:[['OK','full screen'],['◀ ▶ ▲ ▼','select'],['BACK','exit']],spot:[['◀ ▶','camera'],['OK','full screen'],['BACK','overview']],full:[['◀ ▶','skip'],['OK','live tour'],['BACK','overview']]};
+var LEG={grid:[['OK','full screen'],['◀ ▶ ▲ ▼','select'],['BACK','exit']],spot:[['◀ ▶','camera'],['OK','full screen'],['BACK','overview']],full:[['◀ ▶','skip'],['▲','listen'],['▼','mute'],['OK','tour'],['BACK','exit']]};
 function legend(){ var k=full?'full':mode; document.getElementById('legend').innerHTML=LEG[k].map(function(p){ return '<span class="key"><kbd>'+p[0]+'</kbd>'+p[1]+'</span>'; }).join(''); }
 function focusGrid(){ try{ g.focus({preventScroll:true}); }catch(e){ try{ g.focus(); }catch(e2){} } }
 function setMode(m){ mode=m; document.body.classList.toggle('grid',m==='grid'); document.body.classList.toggle('spot',m==='spot'); legend(); layout(true); }
@@ -453,14 +466,14 @@ function moveGrid(dx,dy){
 function wallMove(dx,dy){
   var n=tiles.length; if(!n) return;
   if(!full&&mode==='grid'){ var i=moveGrid(dx,dy); if(i!==sel){ sel=i; markSel(); } }
-  else if(full){ tourGo((dx||dy)>0?1:-1); }   // manual skip in full screen; doesn't force the tour on
+  else if(full){ if(dy<0) setListen(true); else if(dy>0) setListen(false); else tourGo(dx>0?1:-1); }   // full screen: UP=listen on, DOWN=mute, LEFT/RIGHT=skip
   else { sel=(sel+((dx||dy)>0?1:-1)+n)%n; layout(true); }
   focusGrid();
 }
 function wallEnter(){
   if(full){                                   // OK in full screen toggles the live tour (auto-cycle) on/off
     if(tour){ stopTour(); } else { tourActive=true; tourPaused=false; armTour(); }
-    document.getElementById('bigName').textContent=(tour?'◉ LIVE TOUR · ':'')+tiles[sel].label;
+    setBigName();
     legend(); return;
   }
   stopTour();                                 // grid: OK opens the camera you're ON (not CAM 1) and holds it
